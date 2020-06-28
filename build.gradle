@@ -1,0 +1,20 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+
+}
+
+mainClassName = 'org.glayson.tdlib.Main'
+
+jar {
+   manifest {
+       attributes 'Main-Class': 'org.glayson.tdlib.Main'
+   }
+}

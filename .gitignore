@@ -1,0 +1,16 @@
+build
+*.iml
+.vscode
+.idea
+.gradle
+
+tdjni/libtdjni.so
+tdlib
+
+tdjni/CMakeFiles
+tdjni/cmake_install.cmake
+tdjni/CMakeCache.txt
+tdlib.log
+tdjni/Makefile
+
+.env
