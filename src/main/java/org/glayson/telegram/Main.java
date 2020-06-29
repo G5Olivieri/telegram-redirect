@@ -2,6 +2,8 @@ package org.glayson.telegram;
 
 import java.io.IOError;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -23,10 +25,11 @@ public final class Main {
 
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
+        final ChatHandler chatHandler = new ChatHandler(loop);
 
         eventHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         eventHandler.setHandler(TdApi.Chats.CONSTRUCTOR, chatsHandler);
-        eventHandler.setHandler(TdApi.Chat.CONSTRUCTOR, System.out::println);
+        eventHandler.setHandler(TdApi.Chat.CONSTRUCTOR, chatHandler);
 
         loop.start();
 
@@ -34,8 +37,12 @@ public final class Main {
         try {
             System.out.println(login.get(3, TimeUnit.SECONDS));
             long[] chatIds = chatsHandler.getChats().get(3, TimeUnit.SECONDS).chatIds;
-            for (long chatId : chatIds) {
-               loop.send(new TdApi.GetChat(chatId));
+            List<Future<TdApi.Chat>> fs = new ArrayList<>();
+            for (long id : chatIds) {
+                fs.add(chatHandler.getChat(id));
+            }
+            for(Future<TdApi.Chat> f : fs) {
+                System.out.println(f.get());
             }
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();

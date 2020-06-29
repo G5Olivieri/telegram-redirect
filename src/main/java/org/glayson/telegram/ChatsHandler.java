@@ -1,7 +1,5 @@
 package org.glayson.telegram;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class ChatsHandler implements Handler {
@@ -13,18 +11,13 @@ public class ChatsHandler implements Handler {
         this.loop = loop;
     }
     public Future<TdApi.Chats> getChats() {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        return executorService.submit(() -> {
-            try {
-                if (chats != null) {
-                    return chats;
-                }
-                loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 10));
-                synchronized (lock) {
-                    lock.wait();
-                }
-            } finally {
-                executorService.shutdown();
+        return loop.execute(() -> {
+            if (chats != null) {
+                return chats;
+            }
+            loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 10));
+            synchronized (lock) {
+                lock.wait();
             }
             return chats;
         });

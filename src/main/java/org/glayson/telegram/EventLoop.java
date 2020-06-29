@@ -1,10 +1,11 @@
 package org.glayson.telegram;
 
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class EventLoop implements Runnable {
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private Handler eventHandler;
 
     private final int eventSize = 100;
@@ -38,7 +39,12 @@ public final class EventLoop implements Runnable {
         TelegramNativeClient.nativeClientSend(clientId, queryId, function);
     }
 
+    public <T> Future<T> execute(Callable<T> callable) {
+        return this.executor.submit(callable);
+    }
+
     public void close() {
+        this.executor.shutdown();
         send(new TdApi.Close());
     }
 
