@@ -19,16 +19,23 @@ public final class Main {
         }
 
         final long clientId = TelegramNativeClient.createNativeClient();
-        final Authorization auth = new Authorization();
-        final EventHandler eventHandler = new EventHandler(auth);
+        final AuthorizationHandler authHandler = new AuthorizationHandler();
+        final ChatsHandler chatsHandler = new ChatsHandler();
+        final EventHandler eventHandler = new EventHandler();
+        eventHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
+        eventHandler.setHandler(TdApi.Chats.CONSTRUCTOR, chatsHandler);
         final EventLoop loop = new EventLoop(clientId, eventHandler);
+
         loop.start();
-        final Future<Boolean> login = auth.login();
+
+        final Future<Boolean> login = authHandler.login();
         try {
             System.out.println(login.get(3, TimeUnit.SECONDS));
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
         }
-        loop.enqueue(new TdApi.Close());
+        loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 10));
+        loop.waitQueueEmpty();
+        loop.close();
     }
 }

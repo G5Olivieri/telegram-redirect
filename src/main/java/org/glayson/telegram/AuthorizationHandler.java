@@ -7,7 +7,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public final class Authorization {
+public final class AuthorizationHandler implements Handler {
     private volatile boolean auth = false;
 
     public Future<Boolean> login() {
@@ -25,7 +25,9 @@ public final class Authorization {
         });
     }
 
-    public void onAuthorization(EventLoop loop, TdApi.AuthorizationState authorizationState) {
+    @Override
+    public void handle(EventLoop loop, TdApi.Object object) {
+        TdApi.AuthorizationState authorizationState = ((TdApi.UpdateAuthorizationState)object).authorizationState;
         switch (authorizationState.getConstructor()) {
             case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR: {
                 TdApi.TdlibParameters parameters = new TdApi.TdlibParameters();
@@ -39,11 +41,11 @@ public final class Authorization {
                 parameters.systemVersion = "Unknown";
                 parameters.useMessageDatabase = true;
                 parameters.useSecretChats = true;
-                loop.enqueue(new TdApi.SetTdlibParameters(parameters));
+                loop.send(new TdApi.SetTdlibParameters(parameters));
                 break;
             }
             case TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR: {
-                loop.enqueue(new TdApi.CheckDatabaseEncryptionKey());
+                loop.send(new TdApi.CheckDatabaseEncryptionKey());
                 break;
             }
             case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR: {
@@ -55,7 +57,7 @@ public final class Authorization {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                loop.enqueue(new TdApi.SetAuthenticationPhoneNumber(phoneNumber, null));
+                loop.send(new TdApi.SetAuthenticationPhoneNumber(phoneNumber, null));
                 break;
             }
             case TdApi.AuthorizationStateWaitCode.CONSTRUCTOR: {
@@ -67,7 +69,7 @@ public final class Authorization {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                loop.enqueue(new TdApi.CheckAuthenticationCode(code));
+                loop.send(new TdApi.CheckAuthenticationCode(code));
                 break;
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR: {

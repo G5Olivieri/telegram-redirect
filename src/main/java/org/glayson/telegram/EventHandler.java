@@ -1,18 +1,23 @@
 package org.glayson.telegram;
 
-public class EventHandler {
-    private final Authorization auth;
+import java.util.HashMap;
+import java.util.Map;
 
-    public EventHandler(Authorization auth) {
-        this.auth = auth;
+public class EventHandler implements Handler {
+    private Map<Integer, Handler> handlers = new HashMap<>();
+
+    public void setHandler(int constructor, Handler handler) {
+        handlers.put(constructor, handler);
     }
 
+    @Override
     public void handle(EventLoop loop, TdApi.Object object) {
-        switch (object.getConstructor()) {
-            case TdApi.UpdateAuthorizationState.CONSTRUCTOR: {
-                this.auth.onAuthorization(loop, ((TdApi.UpdateAuthorizationState)object).authorizationState);
-                break;
-            }
+        Handler handler = handlers.get(object.getConstructor());
+        if (handler == null) {
+            // ignore not mapped event
+            return;
         }
+        handler.handle(loop, object);
     }
+
 }

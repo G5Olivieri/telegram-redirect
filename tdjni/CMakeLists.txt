@@ -20,7 +20,7 @@ if (NOT Java_FOUND)
 endif()
 message(STATUS "Found Java: ${Java_JAVAC_EXECUTABLE} ${Java_JAVADOC_EXECUTABLE}")
 
-set(TD_API_JAVA_PACKAGE "org/glayson/tdlib")
+set(TD_API_JAVA_PACKAGE "org/glayson/telegram")
 
 add_library(tdjni SHARED td_jni.cpp)
 target_include_directories(tdjni PRIVATE ${JAVA_INCLUDE_PATH} ${JAVA_INCLUDE_PATH2})

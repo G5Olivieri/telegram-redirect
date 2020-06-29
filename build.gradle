@@ -11,10 +11,10 @@ dependencies {
 
 }
 
-mainClassName = 'org.glayson.tdlib.Main'
+mainClassName = 'org.glayson.telegram.Main'
 
 jar {
    manifest {
-       attributes 'Main-Class': 'org.glayson.tdlib.Main'
+       attributes 'Main-Class': 'org.glayson.telegram.Main'
    }
 }
