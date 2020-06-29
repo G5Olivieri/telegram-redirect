@@ -26,13 +26,17 @@ public final class Main {
 
         eventHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         eventHandler.setHandler(TdApi.Chats.CONSTRUCTOR, chatsHandler);
+        eventHandler.setHandler(TdApi.Chat.CONSTRUCTOR, System.out::println);
 
         loop.start();
 
         final Future<Boolean> login = authHandler.login();
         try {
             System.out.println(login.get(3, TimeUnit.SECONDS));
-            System.out.println(chatsHandler.getChats().get(3, TimeUnit.SECONDS));
+            long[] chatIds = chatsHandler.getChats().get(3, TimeUnit.SECONDS).chatIds;
+            for (long chatId : chatIds) {
+               loop.send(new TdApi.GetChat(chatId));
+            }
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
         }
