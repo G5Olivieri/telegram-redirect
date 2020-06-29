@@ -8,15 +8,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public final class AuthorizationHandler implements Handler {
+    private final EventLoop loop;
+    private final Object lock = new Object();
     private volatile boolean auth = false;
+
+    public AuthorizationHandler(EventLoop loop) {
+        this.loop = loop;
+    }
 
     public Future<Boolean> login() {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         return executorService.submit(() -> {
             try {
-                while(!auth);
-            } catch (Exception e) {
-                e.printStackTrace();
+                synchronized (lock) {
+                    lock.wait();
+                }
             }
             finally {
                 executorService.shutdown();
@@ -26,7 +32,7 @@ public final class AuthorizationHandler implements Handler {
     }
 
     @Override
-    public void handle(EventLoop loop, TdApi.Object object) {
+    public void handle(TdApi.Object object) {
         TdApi.AuthorizationState authorizationState = ((TdApi.UpdateAuthorizationState)object).authorizationState;
         switch (authorizationState.getConstructor()) {
             case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR: {
@@ -45,7 +51,7 @@ public final class AuthorizationHandler implements Handler {
                 break;
             }
             case TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR: {
-                loop.send(new TdApi.CheckDatabaseEncryptionKey());
+                this.loop.send(new TdApi.CheckDatabaseEncryptionKey());
                 break;
             }
             case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR: {
@@ -69,11 +75,14 @@ public final class AuthorizationHandler implements Handler {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                loop.send(new TdApi.CheckAuthenticationCode(code));
+                this.loop.send(new TdApi.CheckAuthenticationCode(code));
                 break;
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR: {
-                auth = true;
+                synchronized (lock) {
+                    auth = true;
+                    lock.notify();
+                }
                 break;
             }
             case TdApi.AuthorizationStateClosing.CONSTRUCTOR: {
@@ -82,7 +91,7 @@ public final class AuthorizationHandler implements Handler {
             }
             case TdApi.AuthorizationStateClosed.CONSTRUCTOR: {
                 System.out.println("Closed");
-                loop.stop();
+                this.loop.stop();
                 break;
             }
         }

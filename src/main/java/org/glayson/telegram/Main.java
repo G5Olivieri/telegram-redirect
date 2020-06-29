@@ -18,24 +18,24 @@ public final class Main {
             throw new IOError(new IOException("Write access to the current directory is required"));
         }
 
-        final long clientId = TelegramNativeClient.createNativeClient();
-        final AuthorizationHandler authHandler = new AuthorizationHandler();
-        final ChatsHandler chatsHandler = new ChatsHandler();
-        final EventHandler eventHandler = new EventHandler();
+        final EventLoop loop = new EventLoop();
+        final EventHandler eventHandler = new EventHandler(loop);
+
+        final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
+        final ChatsHandler chatsHandler = new ChatsHandler(loop);
+
         eventHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         eventHandler.setHandler(TdApi.Chats.CONSTRUCTOR, chatsHandler);
-        final EventLoop loop = new EventLoop(clientId, eventHandler);
 
         loop.start();
 
         final Future<Boolean> login = authHandler.login();
         try {
             System.out.println(login.get(3, TimeUnit.SECONDS));
+            System.out.println(chatsHandler.getChats().get(3, TimeUnit.SECONDS));
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             e.printStackTrace();
         }
-        loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 10));
-        loop.waitQueueEmpty();
         loop.close();
     }
 }
