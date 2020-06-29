@@ -51,7 +51,7 @@ public final class AuthorizationHandler implements Handler {
                 break;
             }
             case TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR: {
-                this.loop.send(new TdApi.CheckDatabaseEncryptionKey());
+                loop.send(new TdApi.CheckDatabaseEncryptionKey());
                 break;
             }
             case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR: {
@@ -75,7 +75,7 @@ public final class AuthorizationHandler implements Handler {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                this.loop.send(new TdApi.CheckAuthenticationCode(code));
+                loop.send(new TdApi.CheckAuthenticationCode(code));
                 break;
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR: {
@@ -91,7 +91,7 @@ public final class AuthorizationHandler implements Handler {
             }
             case TdApi.AuthorizationStateClosed.CONSTRUCTOR: {
                 System.out.println("Closed");
-                this.loop.stop();
+                loop.stop();
                 break;
             }
         }
