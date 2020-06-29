@@ -4,13 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class EventHandler implements Handler {
-    private final EventLoop loop;
     private final Map<Integer, Handler> handlers = new HashMap<>();
-
-    public EventHandler(EventLoop loop) {
-        this.loop = loop;
-        this.loop.setEventHandler(this);
-    }
 
     public void setHandler(int constructor, Handler handler) {
         handlers.put(constructor, handler);

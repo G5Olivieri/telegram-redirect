@@ -20,8 +20,8 @@ public final class Main {
             throw new IOError(new IOException("Write access to the current directory is required"));
         }
 
-        final EventLoop loop = new EventLoop();
-        final EventHandler eventHandler = new EventHandler(loop);
+        final EventHandler eventHandler = new EventHandler();
+        final EventLoop loop = new EventLoop(eventHandler);
 
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
