@@ -1,17 +1,24 @@
 package org.glayson.telegram;
 
-public class ForwarderMessagesHandler implements Handler {
-    private long chatId;
+import java.util.concurrent.ConcurrentHashMap;
 
+public final class ForwarderMessagesHandler implements Handler {
+    private final ConcurrentHashMap<Long, Forwarder> forwards = new ConcurrentHashMap();
+    private final EventLoop loop;
+
+    public ForwarderMessagesHandler(EventLoop loop) {
+        this.loop = loop;
+    }
     @Override
     public void handle(TdApi.Object object) {
         TdApi.UpdateNewMessage newMessage = (TdApi.UpdateNewMessage)object;
-        if (newMessage.message.chatId == chatId) {
-            System.out.println(newMessage);
+        Forwarder forwarder = forwards.get(newMessage.message.chatId);
+        if(forwarder != null) {
+            forwarder.forward(newMessage.message);
         }
     }
 
-    public void setChatId(long chatId) {
-        this.chatId = chatId;
+    public void setChatId(long inputChatId, long outputChatId) {
+        forwards.put(inputChatId, new Forwarder(loop, outputChatId));
     }
 }

@@ -26,7 +26,7 @@ public final class Main {
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
         final ChatHandler chatHandler = new ChatHandler(loop);
-        final ForwarderMessagesHandler forwarderMessages = new ForwarderMessagesHandler();
+        final ForwarderMessagesHandler forwarderMessages = new ForwarderMessagesHandler(loop);
 
         updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, forwarderMessages);
@@ -56,7 +56,7 @@ public final class Main {
             ChatHandler chatHandler,
             ForwarderMessagesHandler forwarderMessagesHandler
     ) throws ExecutionException, InterruptedException {
-        String[] args = command.split(" ", 2);
+        String[] args = command.split(" ");
         switch (args[0]) {
             case "gcs": {
                 TdApi.Chats chats = chatsHandler.getChats().get();
@@ -79,7 +79,7 @@ public final class Main {
                 break;
             }
             case "nm": {
-                forwarderMessagesHandler.setChatId(Long.parseLong(args[1]));
+                forwarderMessagesHandler.setChatId(Long.parseLong(args[1]), Long.parseLong(args[2]));
                 break;
             }
         }
