@@ -1,13 +1,12 @@
 package org.glayson.telegram;
 
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class EventLoop implements Runnable {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private final Handler eventHandler;
 
     private final int EVENT_SIZE = 100;
     private final long[] eventIds = new long[EVENT_SIZE];
@@ -15,13 +14,12 @@ public final class EventLoop implements Runnable {
     private final long clientId;
 
     private final AtomicLong currentQueryId = new AtomicLong();
-    private final Set<Long> eventQueue = ConcurrentHashMap.newKeySet();
+    private final Map<Long, Handler> handlers = new ConcurrentHashMap<>();
     private volatile boolean isActive = true;
 
-    public EventLoop(Handler eventHandler) {
+    public EventLoop(Handler updatesHandler) {
         this.clientId = TelegramNativeClient.createNativeClient();
-        this.eventQueue.add(0L);
-        this.eventHandler = eventHandler;
+        this.handlers.put(0L, updatesHandler);
     }
 
     public void stop() {
@@ -32,10 +30,10 @@ public final class EventLoop implements Runnable {
         new Thread(this).start();
     }
 
-    public void send(TdApi.Function function) {
+    public void send(TdApi.Function function, Handler handler) {
         Objects.requireNonNull(function);
         long queryId = currentQueryId.incrementAndGet();
-        eventQueue.add(queryId);
+        handlers.put(queryId, handler);
         TelegramNativeClient.nativeClientSend(clientId, queryId, function);
     }
 
@@ -46,7 +44,7 @@ public final class EventLoop implements Runnable {
 
     public void close() {
         this.executor.shutdown();
-        send(new TdApi.Close());
+        send(new TdApi.Close(), System.out::println);
     }
 
     @Override
@@ -55,7 +53,7 @@ public final class EventLoop implements Runnable {
         while(isActive) {
             receiveQueries(timeout);
         }
-        while(eventQueue.size() != 1) {
+        while(handlers.size() != 1) {
             receiveQueries(timeout);
         }
         TelegramNativeClient.destroyNativeClient(clientId);
@@ -71,9 +69,13 @@ public final class EventLoop implements Runnable {
     }
 
     private void processEvent(long eventId, TdApi.Object event) {
-        this.eventHandler.handle(event);
+        Handler handler = this.handlers.get(eventId);
+        if (handler == null) {
+           return;
+        }
+        handler.handle(event);
         if (eventId != 0){
-            this.eventQueue.remove(eventId);
+            this.handlers.remove(eventId);
         }
     }
 }

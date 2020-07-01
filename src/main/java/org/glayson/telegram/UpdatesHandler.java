@@ -3,7 +3,7 @@ package org.glayson.telegram;
 import java.util.HashMap;
 import java.util.Map;
 
-public class EventHandler implements Handler {
+public class UpdatesHandler implements Handler {
     private final Map<Integer, Handler> handlers = new HashMap<>();
 
     public void setHandler(int constructor, Handler handler) {

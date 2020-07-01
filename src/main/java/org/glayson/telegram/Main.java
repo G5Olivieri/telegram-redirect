@@ -1,9 +1,9 @@
 package org.glayson.telegram;
 
+import java.io.BufferedReader;
 import java.io.IOError;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.InputStreamReader;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -20,33 +20,68 @@ public final class Main {
             throw new IOError(new IOException("Write access to the current directory is required"));
         }
 
-        final EventHandler eventHandler = new EventHandler();
-        final EventLoop loop = new EventLoop(eventHandler);
+        final UpdatesHandler updatesHandler = new UpdatesHandler();
+        final EventLoop loop = new EventLoop(updatesHandler);
 
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
         final ChatHandler chatHandler = new ChatHandler(loop);
+        final ForwarderMessagesHandler forwarderMessages = new ForwarderMessagesHandler();
 
-        eventHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
-        eventHandler.setHandler(TdApi.Chats.CONSTRUCTOR, chatsHandler);
-        eventHandler.setHandler(TdApi.Chat.CONSTRUCTOR, chatHandler);
+        updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
+        updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, forwarderMessages);
 
         loop.start();
 
         final Future<Boolean> login = authHandler.login();
         try {
             System.out.println(login.get(3, TimeUnit.SECONDS));
-            long[] chatIds = chatsHandler.getChats().get(3, TimeUnit.SECONDS).chatIds;
-            List<Future<TdApi.Chat>> fs = new ArrayList<>();
-            for (long id : chatIds) {
-                fs.add(chatHandler.getChat(id));
+            String command = "";
+            while(!command.equals("q")) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                System.out.println("q para sair");
+                command = reader.readLine();
+                commandHandler(command, chatsHandler, chatHandler, forwarderMessages);
             }
-            for(Future<TdApi.Chat> f : fs) {
-                System.out.println(f.get());
-            }
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            loop.close();
         }
-        loop.close();
+    }
+
+    private static void commandHandler(
+            String command,
+            ChatsHandler chatsHandler,
+            ChatHandler chatHandler,
+            ForwarderMessagesHandler forwarderMessagesHandler
+    ) throws ExecutionException, InterruptedException {
+        String[] args = command.split(" ", 2);
+        switch (args[0]) {
+            case "gcs": {
+                TdApi.Chats chats = chatsHandler.getChats().get();
+                System.out.println(chats);
+                for (long chatId : chats.chatIds) {
+                    TdApi.Chat chat = chatHandler.getChat(chatId).get();
+                    String type = "";
+                    switch (chat.type.getConstructor()) {
+                        case TdApi.ChatTypePrivate.CONSTRUCTOR: {
+                            type = "User";
+                            break;
+                        }
+                        case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
+                            type = "Group";
+                            break;
+                        }
+                    }
+                    System.out.printf("Chat (%s): %s (%s)\n", chat.id, chat.title, type);
+                }
+                break;
+            }
+            case "nm": {
+                forwarderMessagesHandler.setChatId(Long.parseLong(args[1]));
+                break;
+            }
+        }
     }
 }

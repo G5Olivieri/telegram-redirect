@@ -25,6 +25,9 @@ public final class AuthorizationHandler implements Handler {
 
     @Override
     public void handle(TdApi.Object object) {
+        if (object.getConstructor() != TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
+            return;
+        }
         TdApi.AuthorizationState authorizationState = ((TdApi.UpdateAuthorizationState)object).authorizationState;
         switch (authorizationState.getConstructor()) {
             case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR: {
@@ -39,11 +42,11 @@ public final class AuthorizationHandler implements Handler {
                 parameters.systemVersion = "Unknown";
                 parameters.useMessageDatabase = true;
                 parameters.useSecretChats = true;
-                loop.send(new TdApi.SetTdlibParameters(parameters));
+                loop.send(new TdApi.SetTdlibParameters(parameters), this);
                 break;
             }
             case TdApi.AuthorizationStateWaitEncryptionKey.CONSTRUCTOR: {
-                loop.send(new TdApi.CheckDatabaseEncryptionKey());
+                loop.send(new TdApi.CheckDatabaseEncryptionKey(), this);
                 break;
             }
             case TdApi.AuthorizationStateWaitPhoneNumber.CONSTRUCTOR: {
@@ -55,7 +58,7 @@ public final class AuthorizationHandler implements Handler {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                loop.send(new TdApi.SetAuthenticationPhoneNumber(phoneNumber, null));
+                loop.send(new TdApi.SetAuthenticationPhoneNumber(phoneNumber, null), this);
                 break;
             }
             case TdApi.AuthorizationStateWaitCode.CONSTRUCTOR: {
@@ -67,7 +70,7 @@ public final class AuthorizationHandler implements Handler {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                loop.send(new TdApi.CheckAuthenticationCode(code));
+                loop.send(new TdApi.CheckAuthenticationCode(code), this);
                 break;
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR: {

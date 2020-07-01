@@ -3,7 +3,7 @@ package org.glayson.telegram;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
-public class ChatHandler implements Handler {
+public class ChatHandler implements AbstractHandler {
     private final EventLoop loop;
     private final Object lock = new Object();
     private final ConcurrentHashMap<Long, TdApi.Chat> cache = new ConcurrentHashMap<>();
@@ -18,7 +18,7 @@ public class ChatHandler implements Handler {
                 return cache.get(chatId);
             }
 
-            loop.send(new TdApi.GetChat(chatId));
+            loop.send(new TdApi.GetChat(chatId), this);
             synchronized (lock) {
                 lock.wait();
             }
@@ -28,10 +28,18 @@ public class ChatHandler implements Handler {
     }
 
     @Override
-    public void handle(TdApi.Object object) {
+    public void onSuccess(TdApi.Object object) {
         synchronized (lock) {
             TdApi.Chat chat = (TdApi.Chat)object;
             cache.put(chat.id, chat);
+            lock.notify();
+        }
+    }
+
+    @Override
+    public void onError(TdApi.Error error) {
+        synchronized (lock) {
+            System.out.printf("Error in class %s: %s\n", getClass().getName(), error);
             lock.notify();
         }
     }
