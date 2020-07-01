@@ -1,5 +1,6 @@
 package org.glayson.telegram;
 
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class Forwarder implements AbstractHandler {
@@ -16,15 +17,49 @@ public final class Forwarder implements AbstractHandler {
     }
 
     public void forward(TdApi.Message message) {
-        TdApi.FormattedText messageText = ((TdApi.MessageText)message.content).text;
-        long requestId = loop.send(new TdApi.SendMessage(
-                chatId,
-                messageMap.get(message.replyToMessageId),
-                null,
-                null,
-                new TdApi.InputMessageText(messageText, false, true)
-        ), this);
-        requests.put(requestId, message.id);
+        switch (message.content.getConstructor()) {
+            case TdApi.MessageText.CONSTRUCTOR: {
+                TdApi.FormattedText messageText = ((TdApi.MessageText)message.content).text;
+                long requestId = loop.send(new TdApi.SendMessage(
+                        chatId,
+                        messageMap.getOrDefault(message.replyToMessageId, 0L),
+                        null,
+                        null,
+                        new TdApi.InputMessageText(messageText, false, true)
+                ), this);
+                requests.put(requestId, message.id);
+                break;
+            }
+            case TdApi.MessagePhoto.CONSTRUCTOR: {
+                TdApi.MessagePhoto photo = (TdApi.MessagePhoto)message.content;
+                TdApi.PhotoSize photoSize = Arrays.stream(photo.photo.sizes)
+                        .filter(ps -> ps.type.equals("y"))
+                        .findFirst()
+                        .orElse(null);
+                if (photoSize != null) {
+                    long requestId = loop.send(
+                            new TdApi.SendMessage(
+                                    chatId,
+                                    messageMap.getOrDefault(message.replyToMessageId, 0L),
+                                    null,
+                                    null,
+                                    new TdApi.InputMessagePhoto(
+                                            new TdApi.InputFileRemote(photoSize.photo.remote.id),
+                                            null,
+                                            null,
+                                            photoSize.width,
+                                            photoSize.height,
+                                            photo.caption,
+                                            0
+                                    )
+                            ),
+                            this
+                    );
+                    requests.put(requestId, message.id);
+                }
+                break;
+            }
+        }
     }
 
     public void edited(TdApi.UpdateMessageContent content) {
