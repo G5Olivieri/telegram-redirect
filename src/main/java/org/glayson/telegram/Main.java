@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public final class Main {
     static {
@@ -30,6 +29,8 @@ public final class Main {
 
         updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, forwarderMessages);
+        updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, forwarderMessages);
+        updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, forwarderMessages);
 
         loop.start();
 
@@ -41,7 +42,7 @@ public final class Main {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 System.out.println("q para sair");
                 command = reader.readLine();
-                commandHandler(command, chatsHandler, chatHandler, forwarderMessages);
+                commandHandler(command, chatsHandler, chatHandler, forwarderMessages, loop);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,7 +55,8 @@ public final class Main {
             String command,
             ChatsHandler chatsHandler,
             ChatHandler chatHandler,
-            ForwarderMessagesHandler forwarderMessagesHandler
+            ForwarderMessagesHandler forwarderMessagesHandler,
+            EventLoop loop
     ) throws ExecutionException, InterruptedException {
         String[] args = command.split(" ");
         switch (args[0]) {
@@ -80,6 +82,12 @@ public final class Main {
             }
             case "nm": {
                 forwarderMessagesHandler.setChatId(Long.parseLong(args[1]), Long.parseLong(args[2]));
+                break;
+            }
+            case "gm": {
+                loop.send(new TdApi.GetMessage(Long.parseLong(args[1]), Long.parseLong(args[2])), (eventId, object) -> {
+                    System.out.println("GET MESSAGE: " + object);
+                });
                 break;
             }
         }

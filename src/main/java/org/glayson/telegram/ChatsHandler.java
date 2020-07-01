@@ -24,7 +24,7 @@ public class ChatsHandler implements AbstractHandler {
     }
 
     @Override
-    public void onSuccess(TdApi.Object object) {
+    public void onSuccess(long eventId, TdApi.Object object) {
         synchronized (lock) {
             chats = (TdApi.Chats)object;
             lock.notify();
@@ -32,7 +32,7 @@ public class ChatsHandler implements AbstractHandler {
     }
 
     @Override
-    public void onError(TdApi.Error error) {
+    public void onError(long eventId, TdApi.Error error) {
         synchronized (lock) {
             System.out.printf("Error in class %s: %s\n", getClass().getName(), error);
             lock.notify();

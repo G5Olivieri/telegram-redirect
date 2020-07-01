@@ -30,11 +30,12 @@ public final class EventLoop implements Runnable {
         new Thread(this).start();
     }
 
-    public void send(TdApi.Function function, Handler handler) {
+    public long send(TdApi.Function function, Handler handler) {
         Objects.requireNonNull(function);
         long queryId = currentQueryId.incrementAndGet();
         handlers.put(queryId, handler);
         TelegramNativeClient.nativeClientSend(clientId, queryId, function);
+        return queryId;
     }
 
     public <T> Future<T> execute(Callable<T> callable) {
@@ -44,7 +45,7 @@ public final class EventLoop implements Runnable {
 
     public void close() {
         this.executor.shutdown();
-        send(new TdApi.Close(), System.out::println);
+        send(new TdApi.Close(), (id, e) -> System.out.println(e));
     }
 
     @Override
@@ -73,7 +74,7 @@ public final class EventLoop implements Runnable {
         if (handler == null) {
            return;
         }
-        handler.handle(event);
+        handler.handle(eventId, event);
         if (eventId != 0){
             this.handlers.remove(eventId);
         }

@@ -2,5 +2,5 @@ package org.glayson.telegram;
 
 @FunctionalInterface
 public interface Handler {
-    void handle(TdApi.Object object);
+    void handle(long eventId, TdApi.Object object);
 }

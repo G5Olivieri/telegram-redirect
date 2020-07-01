@@ -2,11 +2,11 @@ package org.glayson.telegram;
 
 public interface AbstractHandler extends Handler, SuccessHandler, ErrorHandler {
     @Override
-    default void handle(TdApi.Object object) {
+    default void handle(long eventId, TdApi.Object object) {
         if(object.getConstructor() == TdApi.Error.CONSTRUCTOR) {
-            onError((TdApi.Error)object);
+            onError(eventId, (TdApi.Error)object);
             return;
         }
-        onSuccess(object);
+        onSuccess(eventId, object);
     }
 }

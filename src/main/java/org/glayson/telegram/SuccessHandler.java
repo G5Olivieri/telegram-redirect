@@ -1,5 +1,5 @@
 package org.glayson.telegram;
 
 public interface SuccessHandler {
-    void onSuccess(TdApi.Object object);
+    void onSuccess(long eventId, TdApi.Object object);
 }

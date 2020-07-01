@@ -11,13 +11,13 @@ public class UpdatesHandler implements Handler {
     }
 
     @Override
-    public void handle(TdApi.Object object) {
+    public void handle(long eventId, TdApi.Object object) {
         Handler handler = handlers.get(object.getConstructor());
         if (handler == null) {
             // ignore not mapped event
             return;
         }
-        handler.handle(object);
+        handler.handle(eventId, object);
     }
 
 }

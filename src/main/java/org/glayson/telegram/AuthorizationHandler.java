@@ -24,7 +24,7 @@ public final class AuthorizationHandler implements Handler {
     }
 
     @Override
-    public void handle(TdApi.Object object) {
+    public void handle(long eventId, TdApi.Object object) {
         if (object.getConstructor() != TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
             return;
         }
