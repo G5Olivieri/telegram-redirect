@@ -20,14 +20,7 @@ public final class Forwarder implements AbstractHandler {
         switch (message.content.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR: {
                 TdApi.FormattedText messageText = ((TdApi.MessageText)message.content).text;
-                long requestId = loop.send(new TdApi.SendMessage(
-                        chatId,
-                        messageMap.getOrDefault(message.replyToMessageId, 0L),
-                        null,
-                        null,
-                        new TdApi.InputMessageText(messageText, false, true)
-                ), this);
-                requests.put(requestId, message.id);
+                sendMessage(message, new TdApi.InputMessageText(messageText, false, true));
                 break;
             }
             case TdApi.MessagePhoto.CONSTRUCTOR: {
@@ -37,29 +30,127 @@ public final class Forwarder implements AbstractHandler {
                         .findFirst()
                         .orElse(null);
                 if (photoSize != null) {
-                    long requestId = loop.send(
-                            new TdApi.SendMessage(
-                                    chatId,
-                                    messageMap.getOrDefault(message.replyToMessageId, 0L),
-                                    null,
-                                    null,
-                                    new TdApi.InputMessagePhoto(
-                                            new TdApi.InputFileRemote(photoSize.photo.remote.id),
-                                            null,
-                                            null,
-                                            photoSize.width,
-                                            photoSize.height,
-                                            photo.caption,
-                                            0
-                                    )
-                            ),
-                            this
+                    sendMessage(
+                        message,
+                        new TdApi.InputMessagePhoto(
+                            newInputFileRemote(photoSize.photo.remote.id),
+                            null,
+                            null,
+                            photoSize.width,
+                            photoSize.height,
+                            photo.caption,
+                            0
+                        )
                     );
-                    requests.put(requestId, message.id);
                 }
                 break;
             }
+            case TdApi.MessageAudio.CONSTRUCTOR: {
+                TdApi.MessageAudio content = (TdApi.MessageAudio)message.content;
+                TdApi.Audio audio = content.audio;
+                TdApi.Thumbnail albumCoverThumbnail = audio.albumCoverThumbnail;
+                sendMessage(
+                    message,
+                    new TdApi.InputMessageAudio(
+                        newInputFileRemote(audio.audio.remote.id),
+                        newThumbnail(albumCoverThumbnail),
+                        audio.duration,
+                        audio.title,
+                        audio.performer,
+                        content.caption
+                    )
+                );
+                break;
+            }
+            case TdApi.MessageVideo.CONSTRUCTOR: {
+                TdApi.MessageVideo content = (TdApi.MessageVideo)message.content;
+                TdApi.Video video = content.video;
+                TdApi.Thumbnail thumbnail = video.thumbnail;
+                sendMessage(
+                    message,
+                    new TdApi.InputMessageVideo(
+                        newInputFileRemote(video.video.remote.id),
+                        newThumbnail(thumbnail),
+                        null,
+                        video.duration,
+                        video.width,
+                        video.height,
+                        video.supportsStreaming,
+                        content.caption,
+                        0
+                    )
+                );
+                break;
+            }
+            case TdApi.MessageDocument.CONSTRUCTOR: {
+                TdApi.MessageDocument content = (TdApi.MessageDocument)message.content;
+                TdApi.Document document = content.document;
+                TdApi.Thumbnail thumbnail = document.thumbnail;
+                String id = document.document.remote.id;
+                sendMessage(
+                    message,
+                    new TdApi.InputMessageDocument(
+                        newInputFileRemote(id),
+                        newThumbnail(thumbnail),
+                        content.caption
+                    )
+                );
+                break;
+            }
+            case TdApi.MessageVoiceNote.CONSTRUCTOR: {
+                TdApi.MessageVoiceNote content = (TdApi.MessageVoiceNote)message.content;
+                TdApi.VoiceNote voiceNote = content.voiceNote;
+                sendMessage(
+                    message,
+                    new TdApi.InputMessageVoiceNote(
+                        newInputFileRemote(voiceNote.voice.remote.id),
+                        voiceNote.duration,
+                        voiceNote.waveform,
+                        content.caption
+                    )
+                );
+                break;
+            }
+            case TdApi.MessageAnimation.CONSTRUCTOR: {
+                TdApi.MessageAnimation content = (TdApi.MessageAnimation)message.content;
+                TdApi.Animation animation = content.animation;
+                sendMessage(
+                    message,
+                    new TdApi.InputMessageAnimation(
+                        newInputFileRemote(animation.animation.remote.id),
+                        newThumbnail(animation.thumbnail),
+                        null,
+                        animation.duration,
+                        animation.width,
+                        animation.height,
+                        content.caption
+                    )
+                );
+                break;
+            }
         }
+    }
+
+    private TdApi.InputThumbnail newThumbnail(TdApi.Thumbnail thumbnail) {
+        return new TdApi.InputThumbnail(newInputFileRemote(thumbnail.file.remote.id), thumbnail.width, thumbnail.height);
+    }
+
+    private TdApi.InputFileRemote newInputFileRemote(String id) {
+        return new TdApi.InputFileRemote(id);
+    }
+
+    private void sendMessage(TdApi.Message message, TdApi.InputMessageContent content) {
+        long requestId = loop.send(
+                new TdApi.SendMessage(
+                        chatId,
+                        messageMap.getOrDefault(message.replyToMessageId, 0L),
+                        null,
+                        null,
+                        content
+                ),
+                this
+        );
+        requests.put(requestId, message.id);
     }
 
     public void edited(TdApi.UpdateMessageContent content) {
