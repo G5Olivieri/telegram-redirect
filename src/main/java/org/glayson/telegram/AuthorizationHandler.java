@@ -58,7 +58,10 @@ public final class AuthorizationHandler implements Handler {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-                loop.send(new TdApi.SetAuthenticationPhoneNumber(phoneNumber, null), this);
+                loop.send(new TdApi.SetAuthenticationPhoneNumber(
+                        phoneNumber,
+                        new TdApi.PhoneNumberAuthenticationSettings(false, true, true)
+                ), this);
                 break;
             }
             case TdApi.AuthorizationStateWaitCode.CONSTRUCTOR: {

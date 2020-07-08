@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 public final class Main {
     static {
@@ -25,24 +24,24 @@ public final class Main {
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
         final ChatHandler chatHandler = new ChatHandler(loop);
-        final ForwarderMessagesHandler forwarderMessages = new ForwarderMessagesHandler(loop);
+        final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler(loop);
 
         updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
-        updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, forwarderMessages);
-        updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, forwarderMessages);
-        updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, forwarderMessages);
+        updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, updateMessageHandler);
+        updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, updateMessageHandler);
+        updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, updateMessageHandler);
 
         loop.start();
 
         final Future<Boolean> login = authHandler.login();
         try {
-            System.out.println(login.get(3, TimeUnit.SECONDS));
+            System.out.println(login.get());
             String command = "";
             while(!command.equals("q")) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 System.out.println("q para sair");
                 command = reader.readLine();
-                commandHandler(command, chatsHandler, chatHandler, forwarderMessages, loop);
+                commandHandler(command, chatsHandler, chatHandler, updateMessageHandler, loop);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,14 +54,13 @@ public final class Main {
             String command,
             ChatsHandler chatsHandler,
             ChatHandler chatHandler,
-            ForwarderMessagesHandler forwarderMessagesHandler,
+            UpdateMessageHandler forwarderMessagesHandler,
             EventLoop loop
     ) throws ExecutionException, InterruptedException {
         String[] args = command.split(" ");
         switch (args[0]) {
             case "gcs": {
                 TdApi.Chats chats = chatsHandler.getChats().get();
-                System.out.println(chats);
                 for (long chatId : chats.chatIds) {
                     TdApi.Chat chat = chatHandler.getChat(chatId).get();
                     String type = "";
@@ -81,7 +79,11 @@ public final class Main {
                 break;
             }
             case "nm": {
-                forwarderMessagesHandler.setChatId(Long.parseLong(args[1]), Long.parseLong(args[2]));
+                Long inputChatId = Long.parseLong(args[1]);
+                Long outputChatId = Long.parseLong(args[2]);
+                final Forwarder forwarder = new Forwarder(loop, outputChatId);
+                forwarderMessagesHandler.putChatHandler(inputChatId, forwarder);
+                forwarderMessagesHandler.putChatHandler(outputChatId, forwarder);
                 break;
             }
             case "gm": {

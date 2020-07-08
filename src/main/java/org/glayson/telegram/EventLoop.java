@@ -45,7 +45,7 @@ public final class EventLoop implements Runnable {
 
     public void close() {
         this.executor.shutdown();
-        send(new TdApi.Close(), (id, e) -> System.out.println(e));
+        send(new TdApi.Close(), (id, e) -> System.out.println("Close received: " + e));
     }
 
     @Override

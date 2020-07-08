@@ -16,7 +16,42 @@ public final class Forwarder implements AbstractHandler {
         messageMap.put(0L, 0L);
     }
 
-    public void forward(TdApi.Message message) {
+    @Override
+    public void onError(long eventId, TdApi.Error error) {
+        System.out.println(error);
+    }
+
+    @Override
+    public void onSuccess(long eventId, TdApi.Object object) {
+        switch (object.getConstructor()) {
+            case TdApi.Message.CONSTRUCTOR: {
+                if (requests.get(eventId) == null) {
+                    return;
+                }
+                TdApi.Message msg = (TdApi.Message)object;
+                long messageId = requests.get(eventId);
+                requests.remove(eventId);
+                stateSending.put(new SendingMessage(msg.chatId, msg.senderUserId, msg.date), messageId);
+                break;
+            }
+            case TdApi.UpdateNewMessage.CONSTRUCTOR: {
+                TdApi.UpdateNewMessage newMessage = (TdApi.UpdateNewMessage)object;
+                forward(newMessage.message);
+                break;
+            }
+            case TdApi.UpdateMessageContent.CONSTRUCTOR: {
+                TdApi.UpdateMessageContent editedMessage = (TdApi.UpdateMessageContent)object;
+                edited(editedMessage);
+                break;
+            }
+            case TdApi.UpdateChatLastMessage.CONSTRUCTOR: {
+                TdApi.UpdateChatLastMessage msg = (TdApi.UpdateChatLastMessage)object;
+                setMessageId(msg);
+            }
+        }
+    }
+
+    private void forward(TdApi.Message message) {
         switch (message.content.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR: {
                 TdApi.FormattedText messageText = ((TdApi.MessageText)message.content).text;
@@ -153,7 +188,7 @@ public final class Forwarder implements AbstractHandler {
         requests.put(requestId, message.id);
     }
 
-    public void edited(TdApi.UpdateMessageContent content) {
+    private void edited(TdApi.UpdateMessageContent content) {
         switch (content.newContent.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR: {
                 TdApi.MessageText msg = (TdApi.MessageText)content.newContent;
@@ -170,7 +205,7 @@ public final class Forwarder implements AbstractHandler {
         }
     }
 
-    public void setMessageId(TdApi.UpdateChatLastMessage msg) {
+    private void setMessageId(TdApi.UpdateChatLastMessage msg) {
         SendingMessage sendingMessage = new SendingMessage(msg.chatId, msg.lastMessage.senderUserId, msg.lastMessage.date);
         Long messageId = stateSending.get(sendingMessage);
         if (messageId == null) {
@@ -179,24 +214,4 @@ public final class Forwarder implements AbstractHandler {
         stateSending.remove(sendingMessage);
         messageMap.put(messageId, msg.lastMessage.id);
     }
-
-    @Override
-    public void onError(long eventId, TdApi.Error error) {
-        System.out.println(error);
-    }
-
-    @Override
-    public void onSuccess(long eventId, TdApi.Object object) {
-        if(object.getConstructor() != TdApi.Message.CONSTRUCTOR) {
-           return;
-        }
-        if (requests.get(eventId) == null) {
-            return;
-        }
-        TdApi.Message msg = (TdApi.Message)object;
-        long messageId = requests.get(eventId);
-        requests.remove(eventId);
-        stateSending.put(new SendingMessage(msg.chatId, msg.senderUserId, msg.date), messageId);
-    }
-
 }
