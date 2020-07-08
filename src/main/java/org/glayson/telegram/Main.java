@@ -1,11 +1,14 @@
 package org.glayson.telegram;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.io.BufferedReader;
 import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class Main {
     static {
@@ -34,12 +37,36 @@ public final class Main {
         loop.start();
 
         final Future<Boolean> login = authHandler.login();
+
+        AtomicLong meId = new AtomicLong(0L);
+        loop.send(new TdApi.GetMe(), (i, o) -> {
+            meId.set(((TdApi.User) o).id);
+        });
         try {
             System.out.println(login.get());
             String command = "";
             while(!command.equals("q")) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 System.out.println("q para sair");
+                TdApi.Chats chats = chatsHandler.getChats().get();
+                for (long chatId : chats.chatIds) {
+                    TdApi.Chat chat = chatHandler.getChat(chatId).get();
+                    String type = "";
+                    switch (chat.type.getConstructor()) {
+                        case TdApi.ChatTypePrivate.CONSTRUCTOR: {
+                            if (((TdApi.ChatTypePrivate)chat.type).userId == meId.get()) {
+                                updateMessageHandler.putChatHandler(chat.id, (i, o) -> System.out.println("ME recebeu: " + o));
+                            }
+                            type = "User";
+                            break;
+                        }
+                        case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
+                            type = "Group";
+                            break;
+                        }
+                    }
+                    System.out.printf("Chat (%s): %s (%s)\n", chat.id, chat.title, type);
+                }
                 command = reader.readLine();
                 commandHandler(command, chatsHandler, chatHandler, updateMessageHandler, loop);
             }
@@ -84,12 +111,6 @@ public final class Main {
                 final Forwarder forwarder = new Forwarder(loop, outputChatId);
                 forwarderMessagesHandler.putChatHandler(inputChatId, forwarder);
                 forwarderMessagesHandler.putChatHandler(outputChatId, forwarder);
-                break;
-            }
-            case "gm": {
-                loop.send(new TdApi.GetMessage(Long.parseLong(args[1]), Long.parseLong(args[2])), (eventId, object) -> {
-                    System.out.println("GET MESSAGE: " + object);
-                });
                 break;
             }
         }
