@@ -3,7 +3,6 @@ package org.glayson.telegram;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class UpdateMessageHandler implements Handler {
-    private final ConcurrentHashMap<Long, Forwarder> forwards = new ConcurrentHashMap<>();
     private final EventLoop loop;
     private final ConcurrentHashMap<Long, Handler> chatHandlers = new ConcurrentHashMap<>();
 
@@ -19,11 +18,12 @@ public final class UpdateMessageHandler implements Handler {
                 break;
             }
             case TdApi.UpdateMessageContent.CONSTRUCTOR: {
-                chatId = ((TdApi.UpdateMessageContent)object).chatId;
-                break;
+               chatId = ((TdApi.UpdateMessageContent)object).chatId;
+               break;
             }
             case TdApi.UpdateChatLastMessage.CONSTRUCTOR: {
                 chatId = ((TdApi.UpdateChatLastMessage)object).chatId;
+                break;
             }
         }
         Handler chatHandler = chatHandlers.get(chatId);
