@@ -38,7 +38,7 @@ public final class Main {
             String command = "";
             while(!command.equals("q")) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                System.out.println("q para sair");
+                System.out.print("q para sair: ");
                 command = reader.readLine();
                 commandHandler(command, loop, chatsHandler, chatHandler, updateMessageHandler);
             }

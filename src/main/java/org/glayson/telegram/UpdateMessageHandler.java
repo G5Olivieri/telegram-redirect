@@ -1,9 +1,12 @@
 package org.glayson.telegram;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class UpdateMessageHandler implements Handler {
-    private final ConcurrentHashMap<Long, Handler> chatHandlers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, List<Handler>> chatHandlers = new ConcurrentHashMap<>();
 
     @Override
     public void handle(long eventId, TdApi.Object object) {
@@ -22,13 +25,15 @@ public final class UpdateMessageHandler implements Handler {
                 break;
             }
         }
-        Handler chatHandler = chatHandlers.get(chatId);
-        if (chatHandler != null) {
+        List<Handler> handlers = chatHandlers.getOrDefault(chatId, Collections.emptyList());
+        for (Handler chatHandler : handlers) {
             chatHandler.handle(eventId, object);
         }
     }
 
     public void putChatHandler(Long chatId, Handler chatHandler) {
-        chatHandlers.put(chatId, chatHandler);
+        List<Handler> handlers = chatHandlers.getOrDefault(chatId, new ArrayList<>());
+        handlers.add(chatHandler);
+        chatHandlers.put(chatId, handlers);
     }
 }
