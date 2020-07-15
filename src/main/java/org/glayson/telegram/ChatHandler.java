@@ -1,46 +1,32 @@
 package org.glayson.telegram;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Future;
-
 public class ChatHandler implements AbstractHandler {
     private final EventLoop loop;
-    private final Object lock = new Object();
-    private final ConcurrentHashMap<Long, TdApi.Chat> cache = new ConcurrentHashMap<>();
+    private TdApi.Chat chat;
+    private volatile boolean isLocked;
 
     public ChatHandler(EventLoop loop) {
         this.loop = loop;
     }
 
-    public Future<TdApi.Chat> getChat(long chatId) {
-        return loop.execute(() -> {
-            if (cache.contains(chatId)) {
-                return cache.get(chatId);
-            }
-
-            loop.send(new TdApi.GetChat(chatId), this);
-            synchronized (lock) {
-                lock.wait();
-            }
-
-            return cache.get(chatId);
-        });
+    public TdApi.Chat getChat(long chatId) {
+        loop.send(new TdApi.GetChat(chatId), this);
+        isLocked = true;
+        while(isLocked) {
+            Thread.onSpinWait();
+        }
+        return chat;
     }
 
     @Override
     public void onSuccess(long eventId, TdApi.Object object) {
-        synchronized (lock) {
-            TdApi.Chat chat = (TdApi.Chat)object;
-            cache.put(chat.id, chat);
-            lock.notify();
-        }
+        chat = (TdApi.Chat)object;
+        isLocked = false;
     }
 
     @Override
     public void onError(long eventId, TdApi.Error error) {
-        synchronized (lock) {
-            System.out.printf("Error in class %s: %s\n", getClass().getName(), error);
-            lock.notify();
-        }
+        System.out.printf("Error in class %s: %s\n", getClass().getName(), error);
+        isLocked = false;
     }
 }

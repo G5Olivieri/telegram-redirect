@@ -3,12 +3,8 @@ package org.glayson.telegram;
 import java.util.concurrent.ConcurrentHashMap;
 
 public final class UpdateMessageHandler implements Handler {
-    private final EventLoop loop;
     private final ConcurrentHashMap<Long, Handler> chatHandlers = new ConcurrentHashMap<>();
 
-    public UpdateMessageHandler(EventLoop loop) {
-        this.loop = loop;
-    }
     @Override
     public void handle(long eventId, TdApi.Object object) {
         Long chatId = 0L;

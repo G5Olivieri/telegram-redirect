@@ -6,8 +6,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class EventLoop implements Runnable {
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
-
     private final int EVENT_SIZE = 100;
     private final long[] eventIds = new long[EVENT_SIZE];
     private final TdApi.Object[] events = new TdApi.Object[EVENT_SIZE];
@@ -30,21 +28,16 @@ public final class EventLoop implements Runnable {
         new Thread(this).start();
     }
 
-    public long send(TdApi.Function function, Handler handler) {
+    public synchronized long send(TdApi.Function function, Handler handler) {
         Objects.requireNonNull(function);
+        Objects.requireNonNull(handler);
         long queryId = currentQueryId.incrementAndGet();
         handlers.put(queryId, handler);
         TelegramNativeClient.nativeClientSend(clientId, queryId, function);
         return queryId;
     }
 
-    public <T> Future<T> execute(Callable<T> callable) {
-        Objects.requireNonNull(callable);
-        return this.executor.submit(callable);
-    }
-
     public void close() {
-        this.executor.shutdown();
         send(new TdApi.Close(), (id, e) -> System.out.println("Close received: " + e));
     }
 

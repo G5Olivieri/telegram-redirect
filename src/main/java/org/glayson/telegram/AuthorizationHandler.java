@@ -9,18 +9,18 @@ public final class AuthorizationHandler implements Handler {
     private final EventLoop loop;
     private final Object lock = new Object();
     private volatile boolean auth = false;
+    private volatile boolean isLocked = false;
 
     public AuthorizationHandler(EventLoop loop) {
         this.loop = loop;
     }
 
-    public Future<Boolean> login() {
-        return loop.execute(() -> {
-            synchronized (lock) {
-                lock.wait();
-            }
-            return auth;
-        });
+    public Boolean login() {
+        isLocked = true;
+        while(isLocked) {
+            Thread.onSpinWait();
+        }
+        return auth;
     }
 
     @Override
@@ -77,18 +77,18 @@ public final class AuthorizationHandler implements Handler {
                 break;
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR: {
-                synchronized (lock) {
-                    auth = true;
-                    lock.notify();
-                }
+                auth = true;
+                isLocked = false;
                 break;
             }
             case TdApi.AuthorizationStateClosing.CONSTRUCTOR: {
                 System.out.println("Closing");
+                isLocked = false;
                 break;
             }
             case TdApi.AuthorizationStateClosed.CONSTRUCTOR: {
                 System.out.println("Closed");
+                isLocked = false;
                 loop.stop();
                 break;
             }

@@ -1,14 +1,9 @@
 package org.glayson.telegram;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.BufferedReader;
 import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
 
 public final class Main {
     static {
@@ -27,7 +22,7 @@ public final class Main {
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
         final ChatHandler chatHandler = new ChatHandler(loop);
-        final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler(loop);
+        final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler();
 
         updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, updateMessageHandler);
@@ -36,39 +31,16 @@ public final class Main {
 
         loop.start();
 
-        final Future<Boolean> login = authHandler.login();
+        final Boolean login = authHandler.login();
 
-        AtomicLong meId = new AtomicLong(0L);
-        loop.send(new TdApi.GetMe(), (i, o) -> {
-            meId.set(((TdApi.User) o).id);
-        });
         try {
-            System.out.println(login.get());
+            System.out.println("It's authorization: " + login);
             String command = "";
             while(!command.equals("q")) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 System.out.println("q para sair");
-                TdApi.Chats chats = chatsHandler.getChats().get();
-                for (long chatId : chats.chatIds) {
-                    TdApi.Chat chat = chatHandler.getChat(chatId).get();
-                    String type = "";
-                    switch (chat.type.getConstructor()) {
-                        case TdApi.ChatTypePrivate.CONSTRUCTOR: {
-                            if (((TdApi.ChatTypePrivate)chat.type).userId == meId.get()) {
-                                updateMessageHandler.putChatHandler(chat.id, (i, o) -> System.out.println("ME recebeu: " + o));
-                            }
-                            type = "User";
-                            break;
-                        }
-                        case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
-                            type = "Group";
-                            break;
-                        }
-                    }
-                    System.out.printf("Chat (%s): %s (%s)\n", chat.id, chat.title, type);
-                }
                 command = reader.readLine();
-                commandHandler(command, chatsHandler, chatHandler, updateMessageHandler, loop);
+                commandHandler(command, loop, chatsHandler, chatHandler, updateMessageHandler);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -77,19 +49,14 @@ public final class Main {
         }
     }
 
-    private static void commandHandler(
-            String command,
-            ChatsHandler chatsHandler,
-            ChatHandler chatHandler,
-            UpdateMessageHandler forwarderMessagesHandler,
-            EventLoop loop
-    ) throws ExecutionException, InterruptedException {
+    private static void commandHandler(String command, EventLoop loop, ChatsHandler chatsHandler, ChatHandler chatHandler, UpdateMessageHandler updateMessageHandler) {
         String[] args = command.split(" ");
         switch (args[0]) {
-            case "gcs": {
-                TdApi.Chats chats = chatsHandler.getChats().get();
+            case "chats": {
+                TdApi.Chats chats = chatsHandler.getChats();
+                StringBuilder sb = new StringBuilder();
                 for (long chatId : chats.chatIds) {
-                    TdApi.Chat chat = chatHandler.getChat(chatId).get();
+                    TdApi.Chat chat = chatHandler.getChat(chatId);
                     String type = "";
                     switch (chat.type.getConstructor()) {
                         case TdApi.ChatTypePrivate.CONSTRUCTOR: {
@@ -101,16 +68,18 @@ public final class Main {
                             break;
                         }
                     }
-                    System.out.printf("Chat (%s): %s (%s)\n", chat.id, chat.title, type);
+                    sb.append(String.format("Chat (%s): %s (%s)\n", chat.id, chat.title, type));
                 }
+                System.out.println(sb);
                 break;
             }
-            case "nm": {
+            case "redirect": {
                 Long inputChatId = Long.parseLong(args[1]);
                 Long outputChatId = Long.parseLong(args[2]);
                 final Forwarder forwarder = new Forwarder(loop, outputChatId);
-                forwarderMessagesHandler.putChatHandler(inputChatId, forwarder);
-                forwarderMessagesHandler.putChatHandler(outputChatId, forwarder);
+                updateMessageHandler.putChatHandler(inputChatId, forwarder);
+                updateMessageHandler.putChatHandler(outputChatId, forwarder);
+                System.out.println("Redirecionando de " + inputChatId + " para " + outputChatId);
                 break;
             }
         }
