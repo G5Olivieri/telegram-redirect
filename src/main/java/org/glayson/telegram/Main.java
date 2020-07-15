@@ -76,10 +76,19 @@ public final class Main {
             case "redirect": {
                 Long inputChatId = Long.parseLong(args[1]);
                 Long outputChatId = Long.parseLong(args[2]);
-                final Forwarder forwarder = new Forwarder(loop, outputChatId);
-                updateMessageHandler.putChatHandler(inputChatId, forwarder);
-                updateMessageHandler.putChatHandler(outputChatId, forwarder);
+                final Forwarder forwarder = new Forwarder(loop, inputChatId, outputChatId);
+                updateMessageHandler.addHandler(forwarder);
                 System.out.println("Redirecionando de " + inputChatId + " para " + outputChatId);
+                break;
+            }
+            case "redirects": {
+                updateMessageHandler.printRedirects();
+                break;
+            }
+            case "remove": {
+                Long inputChatId = Long.parseLong(args[1]);
+                Long outputChatId = Long.parseLong(args[2]);
+                updateMessageHandler.removeHandler(inputChatId, outputChatId);
                 break;
             }
         }

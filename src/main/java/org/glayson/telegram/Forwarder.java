@@ -5,15 +5,25 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class Forwarder implements AbstractHandler {
     private final EventLoop loop;
-    private final long chatId;
+    private final long outputChatId;
+    private final long inputChatId;
     private ConcurrentHashMap<Long, Long> messageMap = new ConcurrentHashMap<>();
     private ConcurrentHashMap<Long, Long> requests = new ConcurrentHashMap<>();
     private ConcurrentHashMap<SendingMessage, Long> stateSending = new ConcurrentHashMap<>();
 
-    public Forwarder(EventLoop loop, long chatId) {
+    public Forwarder(EventLoop loop, long inputChatId, long outputChatId) {
         this.loop = loop;
-        this.chatId = chatId;
+        this.outputChatId = outputChatId;
+        this.inputChatId = inputChatId;
         messageMap.put(0L, 0L);
+    }
+
+    public long outputChatId() {
+        return this.outputChatId;
+    }
+
+    public long inputChatId() {
+        return this.inputChatId;
     }
 
     @Override
@@ -36,21 +46,21 @@ public final class Forwarder implements AbstractHandler {
             }
             case TdApi.UpdateNewMessage.CONSTRUCTOR: {
                 TdApi.UpdateNewMessage newMessage = (TdApi.UpdateNewMessage)object;
-                if (newMessage.message.chatId != chatId) {
+                if (newMessage.message.chatId == inputChatId) {
                     forward(newMessage.message);
                 }
                 break;
             }
             case TdApi.UpdateMessageContent.CONSTRUCTOR: {
                 TdApi.UpdateMessageContent content = (TdApi.UpdateMessageContent)object;
-                if (content.chatId != chatId) {
+                if (content.chatId == inputChatId) {
                     edited(content);
                 }
                 break;
             }
             case TdApi.UpdateChatLastMessage.CONSTRUCTOR: {
                 TdApi.UpdateChatLastMessage message = (TdApi.UpdateChatLastMessage)object;
-                if (message.chatId == chatId) {
+                if (message.chatId == outputChatId) {
                     setMessageId(message);
                 }
                 break;
@@ -187,7 +197,7 @@ public final class Forwarder implements AbstractHandler {
     private void sendMessage(TdApi.Message message, TdApi.InputMessageContent content) {
         long requestId = loop.send(
                 new TdApi.SendMessage(
-                        chatId,
+                        outputChatId,
                         messageMap.getOrDefault(message.replyToMessageId, 0L),
                         null,
                         null,
@@ -204,7 +214,7 @@ public final class Forwarder implements AbstractHandler {
                 TdApi.MessageText msg = (TdApi.MessageText)content.newContent;
                 loop.send(
                         new TdApi.EditMessageText(
-                                chatId,
+                                outputChatId,
                                 messageMap.get(content.messageId),
                                 null,
                                 new TdApi.InputMessageText(msg.text, false, true)
