@@ -21,7 +21,6 @@ public final class Main {
 
         final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
-        final ChatHandler chatHandler = new ChatHandler(loop);
         final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler();
 
         updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
@@ -40,7 +39,7 @@ public final class Main {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
                 System.out.print("q para sair: ");
                 command = reader.readLine();
-                commandHandler(command, loop, chatsHandler, chatHandler, updateMessageHandler);
+                commandHandler(command, loop, chatsHandler, updateMessageHandler);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -49,37 +48,11 @@ public final class Main {
         }
     }
 
-    private static void commandHandler(String command, EventLoop loop, ChatsHandler chatsHandler, ChatHandler chatHandler, UpdateMessageHandler updateMessageHandler) {
+    private static void commandHandler(String command, EventLoop loop, ChatsHandler chatsHandler, UpdateMessageHandler updateMessageHandler) {
         String[] args = command.split(" ");
         switch (args[0]) {
             case "chats": {
-                int chegou = 0;
-                System.out.println("CHEGOU " + ++chegou);
-                TdApi.Chats chats = chatsHandler.getChats();
-                System.out.println("CHEGOU " + ++chegou);
-                StringBuilder sb = new StringBuilder();
-                for (long chatId : chats.chatIds) {
-                    System.out.println("CHEGOU " + ++chegou);
-                    TdApi.Chat chat = chatHandler.getChat(chatId);
-                    System.out.println("CHEGOU " + ++chegou);
-                    String type = "";
-                    System.out.println("CHEGOU " + ++chegou);
-                    switch (chat.type.getConstructor()) {
-                        case TdApi.ChatTypePrivate.CONSTRUCTOR: {
-                            System.out.println("CHEGOU " + ++chegou);
-                            type = "User";
-                            break;
-                        }
-                        case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
-                            System.out.println("CHEGOU " + ++chegou);
-                            type = "Group";
-                            break;
-                        }
-                    }
-                    System.out.println("CHEGOU " + ++chegou);
-                    sb.append(String.format("Chat (%s): %s (%s)\n", chat.id, chat.title, type));
-                }
-                System.out.println(sb);
+                chatsHandler.getChats();
                 break;
             }
             case "redirect": {
