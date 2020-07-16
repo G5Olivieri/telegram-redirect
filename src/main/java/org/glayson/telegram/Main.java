@@ -53,7 +53,10 @@ public final class Main {
         String[] args = command.split(" ");
         switch (args[0]) {
             case "chats": {
+                System.out.println("CHEGOU");
                 TdApi.Chats chats = chatsHandler.getChats();
+                System.out.println(chats);
+                System.out.println("CHEGOU 1");
                 StringBuilder sb = new StringBuilder();
                 for (long chatId : chats.chatIds) {
                     TdApi.Chat chat = chatHandler.getChat(chatId);
