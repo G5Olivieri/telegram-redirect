@@ -7,7 +7,7 @@ public class ChatsHandler implements AbstractHandler {
         this.loop = loop;
     }
     public void getChats() {
-        loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 10), this);
+        loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 20), this);
     }
 
     @Override
