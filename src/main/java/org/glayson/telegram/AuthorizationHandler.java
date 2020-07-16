@@ -3,23 +3,16 @@ package org.glayson.telegram;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.Future;
 
 public final class AuthorizationHandler implements Handler {
     private final EventLoop loop;
-    private final Object lock = new Object();
     private volatile boolean auth = false;
-    private volatile boolean isLocked = false;
 
     public AuthorizationHandler(EventLoop loop) {
         this.loop = loop;
     }
 
     public Boolean login() {
-        isLocked = true;
-        while(isLocked) {
-            Thread.onSpinWait();
-        }
         return auth;
     }
 
@@ -78,17 +71,14 @@ public final class AuthorizationHandler implements Handler {
             }
             case TdApi.AuthorizationStateReady.CONSTRUCTOR: {
                 auth = true;
-                isLocked = false;
                 break;
             }
             case TdApi.AuthorizationStateClosing.CONSTRUCTOR: {
                 System.out.println("Closing");
-                isLocked = false;
                 break;
             }
             case TdApi.AuthorizationStateClosed.CONSTRUCTOR: {
                 System.out.println("Closed");
-                isLocked = false;
                 loop.stop();
                 break;
             }

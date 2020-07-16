@@ -25,6 +25,16 @@ public final class EventLoop implements Runnable {
     }
 
     public void start() {
+        AuthorizationHandler auth = new AuthorizationHandler(this);
+        UpdatesHandler updatesHandler = (UpdatesHandler)this.handlers.get(0L);
+        updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, auth);
+
+        while (!auth.login()) {
+            receiveQueries(300);
+        }
+
+        System.out.println("It's authorization: " + auth.login());
+
         new Thread(this).start();
     }
 

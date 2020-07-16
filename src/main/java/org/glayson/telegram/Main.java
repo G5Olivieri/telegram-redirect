@@ -19,21 +19,16 @@ public final class Main {
         final UpdatesHandler updatesHandler = new UpdatesHandler();
         final EventLoop loop = new EventLoop(updatesHandler);
 
-        final AuthorizationHandler authHandler = new AuthorizationHandler(loop);
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
         final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler();
 
-        updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, authHandler);
         updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, updateMessageHandler);
         updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, updateMessageHandler);
         updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, updateMessageHandler);
 
         loop.start();
 
-        final Boolean login = authHandler.login();
-
         try {
-            System.out.println("It's authorization: " + login);
             String command = "";
             while(!command.equals("q")) {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
