@@ -10,17 +10,25 @@ public class ChatHandler implements AbstractHandler {
     }
 
     public TdApi.Chat getChat(long chatId) {
+        int chegou = 10;
+        System.out.println("CHEGOU " + ++chegou);
         loop.send(new TdApi.GetChat(chatId), this);
+        System.out.println("CHEGOU " + ++chegou);
         isLocked = true;
+        System.out.println("CHEGOU " + ++chegou);
         while(isLocked) {
             Thread.onSpinWait();
         }
+        System.out.println("CHEGOU " + ++chegou);
         return chat;
     }
 
     @Override
     public void onSuccess(long eventId, TdApi.Object object) {
+        int chegou = 6;
+        System.out.println("CHEGOU " + ++chegou);
         chat = (TdApi.Chat)object;
+        System.out.println("CHEGOU " + ++chegou);
         isLocked = false;
     }
 
