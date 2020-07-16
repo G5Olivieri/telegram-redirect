@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   app:
-    build: docker
+    image: g5oivier/tdlib
     env_file:
       - .env
     working_dir: /app
