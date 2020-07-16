@@ -56,7 +56,6 @@ public final class Main {
                 int chegou = 0;
                 System.out.println("CHEGOU " + ++chegou);
                 TdApi.Chats chats = chatsHandler.getChats();
-                System.out.println(chats);
                 System.out.println("CHEGOU " + ++chegou);
                 StringBuilder sb = new StringBuilder();
                 for (long chatId : chats.chatIds) {
