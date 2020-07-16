@@ -19,6 +19,7 @@ public final class AuthorizationHandler implements Handler {
     @Override
     public void handle(long eventId, TdApi.Object object) {
         if (object.getConstructor() != TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
+            System.out.println("NOT MAPPED AUTHORIZATION: " + object);
             return;
         }
         TdApi.AuthorizationState authorizationState = ((TdApi.UpdateAuthorizationState)object).authorizationState;
