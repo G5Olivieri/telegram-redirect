@@ -53,24 +53,31 @@ public final class Main {
         String[] args = command.split(" ");
         switch (args[0]) {
             case "chats": {
-                System.out.println("CHEGOU");
+                int chegou = 0;
+                System.out.println("CHEGOU " + ++chegou);
                 TdApi.Chats chats = chatsHandler.getChats();
                 System.out.println(chats);
-                System.out.println("CHEGOU 1");
+                System.out.println("CHEGOU " + ++chegou);
                 StringBuilder sb = new StringBuilder();
                 for (long chatId : chats.chatIds) {
+                    System.out.println("CHEGOU " + ++chegou);
                     TdApi.Chat chat = chatHandler.getChat(chatId);
+                    System.out.println("CHEGOU " + ++chegou);
                     String type = "";
+                    System.out.println("CHEGOU " + ++chegou);
                     switch (chat.type.getConstructor()) {
                         case TdApi.ChatTypePrivate.CONSTRUCTOR: {
+                            System.out.println("CHEGOU " + ++chegou);
                             type = "User";
                             break;
                         }
                         case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
+                            System.out.println("CHEGOU " + ++chegou);
                             type = "Group";
                             break;
                         }
                     }
+                    System.out.println("CHEGOU " + ++chegou);
                     sb.append(String.format("Chat (%s): %s (%s)\n", chat.id, chat.title, type));
                 }
                 System.out.println(sb);
