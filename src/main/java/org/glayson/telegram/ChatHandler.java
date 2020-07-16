@@ -16,9 +16,9 @@ public class ChatHandler implements AbstractHandler {
         System.out.println("CHEGOU " + ++chegou);
         isLocked = true;
         System.out.println("CHEGOU " + ++chegou);
-        while(isLocked) {
+        synchronized (this) {
             try {
-                Thread.sleep(300);
+                wait();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -33,7 +33,9 @@ public class ChatHandler implements AbstractHandler {
         System.out.println("CHEGOU " + ++chegou);
         chat = (TdApi.Chat)object;
         System.out.println("CHEGOU " + ++chegou);
-        isLocked = false;
+        synchronized (this) {
+            notifyAll();
+        }
         System.out.println("CHEGOU " + ++chegou);
     }
 
