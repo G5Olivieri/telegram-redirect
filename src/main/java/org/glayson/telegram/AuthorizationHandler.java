@@ -18,10 +18,15 @@ public final class AuthorizationHandler implements Handler {
 
     @Override
     public void handle(long eventId, TdApi.Object object) {
-        if (object.getConstructor() != TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
-            System.out.println("NOT MAPPED AUTHORIZATION: " + object);
+        if (object.getConstructor() == TdApi.Error.CONSTRUCTOR) {
+            System.out.println(object);
             return;
         }
+
+        if (object.getConstructor() != TdApi.UpdateAuthorizationState.CONSTRUCTOR) {
+            return;
+        }
+
         TdApi.AuthorizationState authorizationState = ((TdApi.UpdateAuthorizationState)object).authorizationState;
         switch (authorizationState.getConstructor()) {
             case TdApi.AuthorizationStateWaitTdlibParameters.CONSTRUCTOR: {
