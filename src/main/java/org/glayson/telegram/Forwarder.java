@@ -69,7 +69,6 @@ public final class Forwarder implements AbstractHandler {
     }
 
     private void forward(TdApi.Message message) {
-        System.out.println(message);
         switch (message.content.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR: {
                 TdApi.FormattedText messageText = ((TdApi.MessageText)message.content).text;
