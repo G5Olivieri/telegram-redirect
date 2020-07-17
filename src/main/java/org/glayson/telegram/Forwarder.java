@@ -225,6 +225,10 @@ public final class Forwarder implements AbstractHandler {
     }
 
     private void setMessageId(TdApi.UpdateChatLastMessage msg) {
+        if (msg == null || msg.lastMessage == null) {
+            System.err.println("Caiu nulo nessa porra: " + msg);
+            return;
+        }
         SendingMessage sendingMessage = new SendingMessage(msg.chatId, msg.lastMessage.senderUserId, msg.lastMessage.date);
         Long messageId = stateSending.get(sendingMessage);
         if (messageId == null) {
