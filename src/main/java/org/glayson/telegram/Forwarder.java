@@ -69,6 +69,7 @@ public final class Forwarder implements AbstractHandler {
     }
 
     private void forward(TdApi.Message message) {
+        System.out.println(message);
         switch (message.content.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR: {
                 TdApi.FormattedText messageText = ((TdApi.MessageText)message.content).text;
@@ -78,8 +79,7 @@ public final class Forwarder implements AbstractHandler {
             case TdApi.MessagePhoto.CONSTRUCTOR: {
                 TdApi.MessagePhoto photo = (TdApi.MessagePhoto)message.content;
                 TdApi.PhotoSize photoSize = Arrays.stream(photo.photo.sizes)
-                        .filter(ps -> ps.type.equals("y"))
-                        .findFirst()
+                        .reduce((a, b) -> b)
                         .orElse(null);
                 if (photoSize != null) {
                     sendMessage(
