@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 
 public class ChatHandler implements AbstractHandler {
     private final EventLoop loop;
-    private ConcurrentHashMap<Long, Consumer<TdApi.Chat>> callbacks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Consumer<TdApi.Chat>> callbacks = new ConcurrentHashMap<>();
 
     public ChatHandler(EventLoop loop) {
         this.loop = loop;
@@ -20,8 +20,10 @@ public class ChatHandler implements AbstractHandler {
     public void onSuccess(long eventId, TdApi.Object object) {
         TdApi.Chat chat = (TdApi.Chat)object;
         Consumer<TdApi.Chat> callback = callbacks.get(eventId);
-        callbacks.remove(eventId);
-        callback.accept(chat);
+        if (callback != null) {
+            callbacks.remove(eventId);
+            callback.accept(chat);
+        }
     }
 
     @Override
