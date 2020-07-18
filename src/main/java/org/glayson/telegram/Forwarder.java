@@ -208,13 +208,17 @@ public final class Forwarder implements AbstractHandler {
     }
 
     private void edited(TdApi.UpdateMessageContent content) {
+        Long msgId = messageMap.get(content.messageId);
+        if (msgId == null) {
+            return;
+        }
         switch (content.newContent.getConstructor()) {
             case TdApi.MessageText.CONSTRUCTOR: {
                 TdApi.MessageText msg = (TdApi.MessageText)content.newContent;
                 loop.send(
                         new TdApi.EditMessageText(
                                 outputChatId,
-                                messageMap.get(content.messageId),
+                                msgId,
                                 null,
                                 new TdApi.InputMessageText(msg.text, false, true)
                         ),
