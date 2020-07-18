@@ -1,38 +1,59 @@
 package org.glayson.telegram;
 
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ChatsHandler implements AbstractHandler {
     private final EventLoop loop;
     private final ChatHandler chatHandler;
+    private final ConcurrentHashMap<Long, Consumer<String>> callbacks = new ConcurrentHashMap<>();
 
     public ChatsHandler(EventLoop loop) {
         this.loop = loop;
         chatHandler = new ChatHandler(loop);
     }
-    public void getChats() {
-        loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 20), this);
+    public void getChats(Consumer<String> callback) {
+        long requestId = loop.send(new TdApi.GetChats(new TdApi.ChatListMain(), Long.MAX_VALUE, 0, 20), this);
+        callbacks.put(requestId, callback);
     }
 
     @Override
     public void onSuccess(long eventId, TdApi.Object object) {
+        Consumer<String> callback = callbacks.get(eventId);
+        if (callback == null) {
+            return;
+        }
+
         TdApi.Chats chats = (TdApi.Chats)object;
         for (long chatId : chats.chatIds) {
             chatHandler.getChat(chatId, (chat) -> {
-                String type = "";
+                final StringBuilder type = new StringBuilder();
                 switch (chat.type.getConstructor()) {
                     case TdApi.ChatTypePrivate.CONSTRUCTOR: {
-                        type = "User";
+                        type.append("User");
                         break;
                     }
                     case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
-                        type = "Group";
+                        type.append("Group");
+                        break;
+                    }
+                    case TdApi.ChatTypeSecret.CONSTRUCTOR: {
+                        type.append("Secret");
+                        break;
+                    }
+                    case TdApi.ChatTypeSupergroup.CONSTRUCTOR: {
+                        type.append("SuperGroup");
                         break;
                     }
                 }
-                System.out.printf("Chat (%s): %s (%s)\n", chat.id, chat.title, type);
+
+                callback.accept(String.format("Chat (%s): %s (%s)\n", chat.id, chat.title, type.toString()));
             });
         }
+
+        callbacks.remove(eventId);
     }
 
     @Override

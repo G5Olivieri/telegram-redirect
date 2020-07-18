@@ -1,9 +1,7 @@
 package org.glayson.telegram;
 
-import java.io.BufferedReader;
 import java.io.IOError;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 public final class Main {
     static {
@@ -21,55 +19,25 @@ public final class Main {
 
         final ChatsHandler chatsHandler = new ChatsHandler(loop);
         final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler();
+        final Forwarders forwarders = new Forwarders(loop, updateMessageHandler);
+
+        updateMessageHandler.putChatHandler(1198182309L, new Bot(loop, 1198182309L, chatsHandler, forwarders));
 
         updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, updateMessageHandler);
         updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, updateMessageHandler);
         updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, updateMessageHandler);
 
-        loop.start();
-
-        try {
-            String command = "";
-            while(!command.equals("q")) {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-                System.out.print("q para sair: ");
-                command = reader.readLine();
-                commandHandler(command, loop, chatsHandler, updateMessageHandler);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\nFECHANDO");
             loop.close();
-        }
-    }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }));
 
-    private static void commandHandler(String command, EventLoop loop, ChatsHandler chatsHandler, UpdateMessageHandler updateMessageHandler) {
-        String[] args = command.split(" ");
-        switch (args[0]) {
-            case "chats": {
-                chatsHandler.getChats();
-                break;
-            }
-            case "redirect": {
-                Long inputChatId = Long.parseLong(args[1]);
-                Long outputChatId = Long.parseLong(args[2]);
-                chatsHandler.getChatsByIds(inputChatId, outputChatId, (in, out) -> {
-                    final Forwarder forwarder = new Forwarder(loop, in, out);
-                    updateMessageHandler.addHandler(forwarder);
-                    System.out.println("Redirecionando de " + in + " para " + out );
-                });
-                break;
-            }
-            case "redirects": {
-                updateMessageHandler.printRedirects();
-                break;
-            }
-            case "remove": {
-                Long inputChatId = Long.parseLong(args[1]);
-                Long outputChatId = Long.parseLong(args[2]);
-                updateMessageHandler.removeHandler(inputChatId, outputChatId);
-                break;
-            }
-        }
+        System.out.println("INICIANDO");
+        loop.start();
     }
 }

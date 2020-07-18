@@ -35,7 +35,7 @@ public final class EventLoop implements Runnable {
 
         System.out.println("It's authorization: " + auth.login());
 
-        new Thread(this).start();
+        run();
     }
 
     public synchronized long send(TdApi.Function function, Handler handler) {
@@ -47,7 +47,7 @@ public final class EventLoop implements Runnable {
         return queryId;
     }
 
-    public void close() {
+    public synchronized void close() {
         send(new TdApi.Close(), (id, e) -> System.out.println("Close received: " + e));
     }
 
