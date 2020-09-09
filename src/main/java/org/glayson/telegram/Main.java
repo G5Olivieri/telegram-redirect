@@ -21,14 +21,9 @@ public final class Main {
         final UpdateMessageHandler updateMessageHandler = new UpdateMessageHandler();
         final Forwarders forwarders = new Forwarders(loop, updateMessageHandler);
 
-        updateMessageHandler.putChatHandler(1198182309L, new Bot(loop, 1198182309L, chatsHandler, forwarders));
-
-        updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, updateMessageHandler);
-        updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, updateMessageHandler);
-        updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, updateMessageHandler);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\nFECHANDO");
+            System.out.println("\nSHUTDOWN");
             loop.close();
             try {
                 Thread.sleep(500);
@@ -36,6 +31,29 @@ public final class Main {
                 e.printStackTrace();
             }
         }));
+
+        loop.onStartup(() -> {
+            loop.send(new TdApi.GetMe(), (eventId, object) -> {
+                if (object.getConstructor() == TdApi.Error.CONSTRUCTOR) {
+                    System.err.println("GET ME ERROR");
+                    return;
+                }
+
+                TdApi.User user = (TdApi.User)object;
+                chatsHandler.getChats((chat) -> {
+                    if (chat.type.getConstructor() == TdApi.ChatTypePrivate.CONSTRUCTOR) {
+                        if (chat.title.equals(user.firstName) && chat.lastMessage.senderUserId == user.id) {
+                            updateMessageHandler.putChatHandler(chat.id, new Bot(loop, chat.id, chatsHandler, forwarders));
+                            System.out.println("BOT IS RUNNING");
+                        }
+                    }
+                });
+            });
+        });
+
+        updatesHandler.setHandler(TdApi.UpdateNewMessage.CONSTRUCTOR, updateMessageHandler);
+        updatesHandler.setHandler(TdApi.UpdateMessageContent.CONSTRUCTOR, updateMessageHandler);
+        updatesHandler.setHandler(TdApi.UpdateChatLastMessage.CONSTRUCTOR, updateMessageHandler);
 
         System.out.println("INICIANDO");
         loop.start();

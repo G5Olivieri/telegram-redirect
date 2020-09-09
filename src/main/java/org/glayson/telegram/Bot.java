@@ -34,7 +34,7 @@ public final class Bot implements Handler {
         String[] args = command.split(" ");
         switch (args[0]) {
             case "chats": {
-                chatsHandler.getChats(this::sendMessage);
+                chatsHandler.getChats(this::sendChatMessage);
                 break;
             }
             case "redirect": {
@@ -57,6 +57,30 @@ public final class Bot implements Handler {
                 break;
             }
         }
+    }
+
+    private void sendChatMessage(TdApi.Chat chat) {
+        final StringBuilder type = new StringBuilder();
+        switch (chat.type.getConstructor()) {
+            case TdApi.ChatTypePrivate.CONSTRUCTOR: {
+                type.append("User");
+                break;
+            }
+            case TdApi.ChatTypeBasicGroup.CONSTRUCTOR: {
+                type.append("Group");
+                break;
+            }
+            case TdApi.ChatTypeSecret.CONSTRUCTOR: {
+                type.append("Secret");
+                break;
+            }
+            case TdApi.ChatTypeSupergroup.CONSTRUCTOR: {
+                type.append("SuperGroup");
+                break;
+            }
+        }
+
+        sendMessage(String.format("Chat (%s): %s (%s)\n", chat.id, chat.title, type.toString()));
     }
 
     private void sendMessage(String message) {

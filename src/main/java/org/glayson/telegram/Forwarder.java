@@ -143,6 +143,7 @@ public final class Forwarder implements AbstractHandler {
                         new TdApi.InputMessageDocument(
                                 newInputFileRemote(id),
                                 newThumbnail(thumbnail),
+                                false,
                                 content.caption
                         )
                 );

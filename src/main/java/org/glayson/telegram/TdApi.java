@@ -57,6 +57,28 @@ public class TdApi {
         }
     }
 
+    public static class AnimatedChatPhoto extends Object {
+        public int length;
+        public File file;
+        public double mainFrameTimestamp;
+
+        public AnimatedChatPhoto() {
+        }
+
+        public AnimatedChatPhoto(int length, File file, double mainFrameTimestamp) {
+            this.length = length;
+            this.file = file;
+            this.mainFrameTimestamp = mainFrameTimestamp;
+        }
+
+        public static final int CONSTRUCTOR = 191994926;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class Animation extends Object {
         public int duration;
         public int width;
@@ -688,6 +710,7 @@ public class TdApi {
     }
 
     public static class BasicGroupFullInfo extends Object {
+        public ChatPhoto photo;
         public String description;
         public int creatorUserId;
         public ChatMember[] members;
@@ -696,14 +719,15 @@ public class TdApi {
         public BasicGroupFullInfo() {
         }
 
-        public BasicGroupFullInfo(String description, int creatorUserId, ChatMember[] members, String inviteLink) {
+        public BasicGroupFullInfo(ChatPhoto photo, String description, int creatorUserId, ChatMember[] members, String inviteLink) {
+            this.photo = photo;
             this.description = description;
             this.creatorUserId = creatorUserId;
             this.members = members;
             this.inviteLink = inviteLink;
         }
 
-        public static final int CONSTRUCTOR = 161500149;
+        public static final int CONSTRUCTOR = -127204719;
 
         @Override
         public int getConstructor() {
@@ -755,45 +779,21 @@ public class TdApi {
         public int id;
         public int userId;
         public boolean isOutgoing;
+        public boolean isVideo;
         public CallState state;
 
         public Call() {
         }
 
-        public Call(int id, int userId, boolean isOutgoing, CallState state) {
+        public Call(int id, int userId, boolean isOutgoing, boolean isVideo, CallState state) {
             this.id = id;
             this.userId = userId;
             this.isOutgoing = isOutgoing;
+            this.isVideo = isVideo;
             this.state = state;
         }
 
-        public static final int CONSTRUCTOR = -1837599107;
-
-        @Override
-        public int getConstructor() {
-            return CONSTRUCTOR;
-        }
-    }
-
-    public static class CallConnection extends Object {
-        public long id;
-        public String ip;
-        public String ipv6;
-        public int port;
-        public byte[] peerTag;
-
-        public CallConnection() {
-        }
-
-        public CallConnection(long id, String ip, String ipv6, int port, byte[] peerTag) {
-            this.id = id;
-            this.ip = ip;
-            this.ipv6 = ipv6;
-            this.port = port;
-            this.peerTag = peerTag;
-        }
-
-        public static final int CONSTRUCTOR = 1318542714;
+        public static final int CONSTRUCTOR = 1504070790;
 
         @Override
         public int getConstructor() {
@@ -1007,6 +1007,77 @@ public class TdApi {
         }
     }
 
+    public static class CallServer extends Object {
+        public long id;
+        public String ipAddress;
+        public String ipv6Address;
+        public int port;
+        public CallServerType type;
+
+        public CallServer() {
+        }
+
+        public CallServer(long id, String ipAddress, String ipv6Address, int port, CallServerType type) {
+            this.id = id;
+            this.ipAddress = ipAddress;
+            this.ipv6Address = ipv6Address;
+            this.port = port;
+            this.type = type;
+        }
+
+        public static final int CONSTRUCTOR = 1865932695;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public abstract static class CallServerType extends Object {
+    }
+
+    public static class CallServerTypeTelegramReflector extends CallServerType {
+        public byte[] peerTag;
+
+        public CallServerTypeTelegramReflector() {
+        }
+
+        public CallServerTypeTelegramReflector(byte[] peerTag) {
+            this.peerTag = peerTag;
+        }
+
+        public static final int CONSTRUCTOR = -1507850700;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class CallServerTypeWebrtc extends CallServerType {
+        public String username;
+        public String password;
+        public boolean supportsTurn;
+        public boolean supportsStun;
+
+        public CallServerTypeWebrtc() {
+        }
+
+        public CallServerTypeWebrtc(String username, String password, boolean supportsTurn, boolean supportsStun) {
+            this.username = username;
+            this.password = password;
+            this.supportsTurn = supportsTurn;
+            this.supportsStun = supportsStun;
+        }
+
+        public static final int CONSTRUCTOR = 1250622821;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public abstract static class CallState extends Object {
     }
 
@@ -1045,7 +1116,7 @@ public class TdApi {
 
     public static class CallStateReady extends CallState {
         public CallProtocol protocol;
-        public CallConnection[] connections;
+        public CallServer[] servers;
         public String config;
         public byte[] encryptionKey;
         public String[] emojis;
@@ -1054,16 +1125,16 @@ public class TdApi {
         public CallStateReady() {
         }
 
-        public CallStateReady(CallProtocol protocol, CallConnection[] connections, String config, byte[] encryptionKey, String[] emojis, boolean allowP2p) {
+        public CallStateReady(CallProtocol protocol, CallServer[] servers, String config, byte[] encryptionKey, String[] emojis, boolean allowP2p) {
             this.protocol = protocol;
-            this.connections = connections;
+            this.servers = servers;
             this.config = config;
             this.encryptionKey = encryptionKey;
             this.emojis = emojis;
             this.allowP2p = allowP2p;
         }
 
-        public static final int CONSTRUCTOR = 1848397705;
+        public static final int CONSTRUCTOR = -2000107571;
 
         @Override
         public int getConstructor() {
@@ -1254,7 +1325,7 @@ public class TdApi {
         public long id;
         public ChatType type;
         public String title;
-        public ChatPhoto photo;
+        public ChatPhotoInfo photo;
         public ChatPermissions permissions;
         public Message lastMessage;
         public ChatPosition[] positions;
@@ -1278,7 +1349,7 @@ public class TdApi {
         public Chat() {
         }
 
-        public Chat(long id, ChatType type, String title, ChatPhoto photo, ChatPermissions permissions, Message lastMessage, ChatPosition[] positions, boolean isMarkedAsUnread, boolean hasScheduledMessages, boolean canBeDeletedOnlyForSelf, boolean canBeDeletedForAllUsers, boolean canBeReported, boolean defaultDisableNotification, int unreadCount, long lastReadInboxMessageId, long lastReadOutboxMessageId, int unreadMentionCount, ChatNotificationSettings notificationSettings, ChatActionBar actionBar, long pinnedMessageId, long replyMarkupMessageId, DraftMessage draftMessage, String clientData) {
+        public Chat(long id, ChatType type, String title, ChatPhotoInfo photo, ChatPermissions permissions, Message lastMessage, ChatPosition[] positions, boolean isMarkedAsUnread, boolean hasScheduledMessages, boolean canBeDeletedOnlyForSelf, boolean canBeDeletedForAllUsers, boolean canBeReported, boolean defaultDisableNotification, int unreadCount, long lastReadInboxMessageId, long lastReadOutboxMessageId, int unreadMentionCount, ChatNotificationSettings notificationSettings, ChatActionBar actionBar, long pinnedMessageId, long replyMarkupMessageId, DraftMessage draftMessage, String clientData) {
             this.id = id;
             this.type = type;
             this.title = title;
@@ -1304,7 +1375,7 @@ public class TdApi {
             this.clientData = clientData;
         }
 
-        public static final int CONSTRUCTOR = -653583919;
+        public static final int CONSTRUCTOR = 1318398921;
 
         @Override
         public int getConstructor() {
@@ -1513,11 +1584,16 @@ public class TdApi {
     }
 
     public static class ChatActionBarReportSpam extends ChatActionBar {
+        public boolean canUnarchive;
 
         public ChatActionBarReportSpam() {
         }
 
-        public static final int CONSTRUCTOR = -1603417249;
+        public ChatActionBarReportSpam(boolean canUnarchive) {
+            this.canUnarchive = canUnarchive;
+        }
+
+        public static final int CONSTRUCTOR = -1312758246;
 
         @Override
         public int getConstructor() {
@@ -1539,11 +1615,18 @@ public class TdApi {
     }
 
     public static class ChatActionBarReportAddBlock extends ChatActionBar {
+        public boolean canUnarchive;
+        public int distance;
 
         public ChatActionBarReportAddBlock() {
         }
 
-        public static final int CONSTRUCTOR = -87894249;
+        public ChatActionBarReportAddBlock(boolean canUnarchive, int distance) {
+            this.canUnarchive = canUnarchive;
+            this.distance = distance;
+        }
+
+        public static final int CONSTRUCTOR = -914150419;
 
         @Override
         public int getConstructor() {
@@ -1902,18 +1985,18 @@ public class TdApi {
     }
 
     public static class ChatEventPhotoChanged extends ChatEventAction {
-        public Photo oldPhoto;
-        public Photo newPhoto;
+        public ChatPhoto oldPhoto;
+        public ChatPhoto newPhoto;
 
         public ChatEventPhotoChanged() {
         }
 
-        public ChatEventPhotoChanged(Photo oldPhoto, Photo newPhoto) {
+        public ChatEventPhotoChanged(ChatPhoto oldPhoto, ChatPhoto newPhoto) {
             this.oldPhoto = oldPhoto;
             this.newPhoto = newPhoto;
         }
 
-        public static final int CONSTRUCTOR = 1037662734;
+        public static final int CONSTRUCTOR = -811572541;
 
         @Override
         public int getConstructor() {
@@ -2193,9 +2276,10 @@ public class TdApi {
 
     public static class ChatInviteLinkInfo extends Object {
         public long chatId;
+        public int accessibleFor;
         public ChatType type;
         public String title;
-        public ChatPhoto photo;
+        public ChatPhotoInfo photo;
         public int memberCount;
         public int[] memberUserIds;
         public boolean isPublic;
@@ -2203,8 +2287,9 @@ public class TdApi {
         public ChatInviteLinkInfo() {
         }
 
-        public ChatInviteLinkInfo(long chatId, ChatType type, String title, ChatPhoto photo, int memberCount, int[] memberUserIds, boolean isPublic) {
+        public ChatInviteLinkInfo(long chatId, int accessibleFor, ChatType type, String title, ChatPhotoInfo photo, int memberCount, int[] memberUserIds, boolean isPublic) {
             this.chatId = chatId;
+            this.accessibleFor = accessibleFor;
             this.type = type;
             this.title = title;
             this.photo = photo;
@@ -2213,7 +2298,7 @@ public class TdApi {
             this.isPublic = isPublic;
         }
 
-        public static final int CONSTRUCTOR = -323394424;
+        public static final int CONSTRUCTOR = 910695551;
 
         @Override
         public int getConstructor() {
@@ -2647,18 +2732,66 @@ public class TdApi {
     }
 
     public static class ChatPhoto extends Object {
-        public File small;
-        public File big;
+        public long id;
+        public int addedDate;
+        public Minithumbnail minithumbnail;
+        public PhotoSize[] sizes;
+        public AnimatedChatPhoto animation;
 
         public ChatPhoto() {
         }
 
-        public ChatPhoto(File small, File big) {
-            this.small = small;
-            this.big = big;
+        public ChatPhoto(long id, int addedDate, Minithumbnail minithumbnail, PhotoSize[] sizes, AnimatedChatPhoto animation) {
+            this.id = id;
+            this.addedDate = addedDate;
+            this.minithumbnail = minithumbnail;
+            this.sizes = sizes;
+            this.animation = animation;
         }
 
-        public static final int CONSTRUCTOR = -217062456;
+        public static final int CONSTRUCTOR = -113003577;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatPhotoInfo extends Object {
+        public File small;
+        public File big;
+        public boolean hasAnimation;
+
+        public ChatPhotoInfo() {
+        }
+
+        public ChatPhotoInfo(File small, File big, boolean hasAnimation) {
+            this.small = small;
+            this.big = big;
+            this.hasAnimation = hasAnimation;
+        }
+
+        public static final int CONSTRUCTOR = 404510091;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatPhotos extends Object {
+        public int totalCount;
+        public ChatPhoto[] photos;
+
+        public ChatPhotos() {
+        }
+
+        public ChatPhotos(int totalCount, ChatPhoto[] photos) {
+            this.totalCount = totalCount;
+            this.photos = photos;
+        }
+
+        public static final int CONSTRUCTOR = -1510699180;
 
         @Override
         public int getConstructor() {
@@ -2825,7 +2958,58 @@ public class TdApi {
         }
     }
 
-    public static class ChatStatistics extends Object {
+    public abstract static class ChatStatistics extends Object {
+    }
+
+    public static class ChatStatisticsSupergroup extends ChatStatistics {
+        public DateRange period;
+        public StatisticsValue memberCount;
+        public StatisticsValue messageCount;
+        public StatisticsValue viewerCount;
+        public StatisticsValue senderCount;
+        public StatisticsGraph memberCountGraph;
+        public StatisticsGraph joinGraph;
+        public StatisticsGraph joinBySourceGraph;
+        public StatisticsGraph languageGraph;
+        public StatisticsGraph messageContentGraph;
+        public StatisticsGraph actionGraph;
+        public StatisticsGraph dayGraph;
+        public StatisticsGraph weekGraph;
+        public ChatStatisticsMessageSenderInfo[] topSenders;
+        public ChatStatisticsAdministratorActionsInfo[] topAdministrators;
+        public ChatStatisticsInviterInfo[] topInviters;
+
+        public ChatStatisticsSupergroup() {
+        }
+
+        public ChatStatisticsSupergroup(DateRange period, StatisticsValue memberCount, StatisticsValue messageCount, StatisticsValue viewerCount, StatisticsValue senderCount, StatisticsGraph memberCountGraph, StatisticsGraph joinGraph, StatisticsGraph joinBySourceGraph, StatisticsGraph languageGraph, StatisticsGraph messageContentGraph, StatisticsGraph actionGraph, StatisticsGraph dayGraph, StatisticsGraph weekGraph, ChatStatisticsMessageSenderInfo[] topSenders, ChatStatisticsAdministratorActionsInfo[] topAdministrators, ChatStatisticsInviterInfo[] topInviters) {
+            this.period = period;
+            this.memberCount = memberCount;
+            this.messageCount = messageCount;
+            this.viewerCount = viewerCount;
+            this.senderCount = senderCount;
+            this.memberCountGraph = memberCountGraph;
+            this.joinGraph = joinGraph;
+            this.joinBySourceGraph = joinBySourceGraph;
+            this.languageGraph = languageGraph;
+            this.messageContentGraph = messageContentGraph;
+            this.actionGraph = actionGraph;
+            this.dayGraph = dayGraph;
+            this.weekGraph = weekGraph;
+            this.topSenders = topSenders;
+            this.topAdministrators = topAdministrators;
+            this.topInviters = topInviters;
+        }
+
+        public static final int CONSTRUCTOR = 1234327223;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatStatisticsChannel extends ChatStatistics {
         public DateRange period;
         public StatisticsValue memberCount;
         public StatisticsValue meanViewCount;
@@ -2840,12 +3024,12 @@ public class TdApi {
         public StatisticsGraph languageGraph;
         public StatisticsGraph messageInteractionGraph;
         public StatisticsGraph instantViewInteractionGraph;
-        public ChatStatisticsMessageInteractionCounters[] recentMessageInteractions;
+        public ChatStatisticsMessageInteractionInfo[] recentMessageInteractions;
 
-        public ChatStatistics() {
+        public ChatStatisticsChannel() {
         }
 
-        public ChatStatistics(DateRange period, StatisticsValue memberCount, StatisticsValue meanViewCount, StatisticsValue meanShareCount, double enabledNotificationsPercentage, StatisticsGraph memberCountGraph, StatisticsGraph joinGraph, StatisticsGraph muteGraph, StatisticsGraph viewCountByHourGraph, StatisticsGraph viewCountBySourceGraph, StatisticsGraph joinBySourceGraph, StatisticsGraph languageGraph, StatisticsGraph messageInteractionGraph, StatisticsGraph instantViewInteractionGraph, ChatStatisticsMessageInteractionCounters[] recentMessageInteractions) {
+        public ChatStatisticsChannel(DateRange period, StatisticsValue memberCount, StatisticsValue meanViewCount, StatisticsValue meanShareCount, double enabledNotificationsPercentage, StatisticsGraph memberCountGraph, StatisticsGraph joinGraph, StatisticsGraph muteGraph, StatisticsGraph viewCountByHourGraph, StatisticsGraph viewCountBySourceGraph, StatisticsGraph joinBySourceGraph, StatisticsGraph languageGraph, StatisticsGraph messageInteractionGraph, StatisticsGraph instantViewInteractionGraph, ChatStatisticsMessageInteractionInfo[] recentMessageInteractions) {
             this.period = period;
             this.memberCount = memberCount;
             this.meanViewCount = meanViewCount;
@@ -2863,7 +3047,7 @@ public class TdApi {
             this.recentMessageInteractions = recentMessageInteractions;
         }
 
-        public static final int CONSTRUCTOR = -1209139741;
+        public static final int CONSTRUCTOR = -326982581;
 
         @Override
         public int getConstructor() {
@@ -2871,21 +3055,87 @@ public class TdApi {
         }
     }
 
-    public static class ChatStatisticsMessageInteractionCounters extends Object {
+    public static class ChatStatisticsAdministratorActionsInfo extends Object {
+        public int userId;
+        public int deletedMessageCount;
+        public int bannedUserCount;
+        public int restrictedUserCount;
+
+        public ChatStatisticsAdministratorActionsInfo() {
+        }
+
+        public ChatStatisticsAdministratorActionsInfo(int userId, int deletedMessageCount, int bannedUserCount, int restrictedUserCount) {
+            this.userId = userId;
+            this.deletedMessageCount = deletedMessageCount;
+            this.bannedUserCount = bannedUserCount;
+            this.restrictedUserCount = restrictedUserCount;
+        }
+
+        public static final int CONSTRUCTOR = 1988384904;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatStatisticsInviterInfo extends Object {
+        public int userId;
+        public int addedMemberCount;
+
+        public ChatStatisticsInviterInfo() {
+        }
+
+        public ChatStatisticsInviterInfo(int userId, int addedMemberCount) {
+            this.userId = userId;
+            this.addedMemberCount = addedMemberCount;
+        }
+
+        public static final int CONSTRUCTOR = -399517859;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatStatisticsMessageInteractionInfo extends Object {
         public long messageId;
         public int viewCount;
         public int forwardCount;
 
-        public ChatStatisticsMessageInteractionCounters() {
+        public ChatStatisticsMessageInteractionInfo() {
         }
 
-        public ChatStatisticsMessageInteractionCounters(long messageId, int viewCount, int forwardCount) {
+        public ChatStatisticsMessageInteractionInfo(long messageId, int viewCount, int forwardCount) {
             this.messageId = messageId;
             this.viewCount = viewCount;
             this.forwardCount = forwardCount;
         }
 
-        public static final int CONSTRUCTOR = 928223898;
+        public static final int CONSTRUCTOR = -765580756;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class ChatStatisticsMessageSenderInfo extends Object {
+        public int userId;
+        public int sentMessageCount;
+        public int averageCharacterCount;
+
+        public ChatStatisticsMessageSenderInfo() {
+        }
+
+        public ChatStatisticsMessageSenderInfo(int userId, int sentMessageCount, int averageCharacterCount) {
+            this.userId = userId;
+            this.sentMessageCount = sentMessageCount;
+            this.averageCharacterCount = averageCharacterCount;
+        }
+
+        public static final int CONSTRUCTOR = 1716075179;
 
         @Override
         public int getConstructor() {
@@ -4651,6 +4901,65 @@ public class TdApi {
         }
     }
 
+    public abstract static class InputChatPhoto extends Object {
+    }
+
+    public static class InputChatPhotoPrevious extends InputChatPhoto {
+        public long chatPhotoId;
+
+        public InputChatPhotoPrevious() {
+        }
+
+        public InputChatPhotoPrevious(long chatPhotoId) {
+            this.chatPhotoId = chatPhotoId;
+        }
+
+        public static final int CONSTRUCTOR = 23128529;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class InputChatPhotoStatic extends InputChatPhoto {
+        public InputFile photo;
+
+        public InputChatPhotoStatic() {
+        }
+
+        public InputChatPhotoStatic(InputFile photo) {
+            this.photo = photo;
+        }
+
+        public static final int CONSTRUCTOR = 1979179699;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class InputChatPhotoAnimation extends InputChatPhoto {
+        public InputFile animation;
+        public double mainFrameTimestamp;
+
+        public InputChatPhotoAnimation() {
+        }
+
+        public InputChatPhotoAnimation(InputFile animation, double mainFrameTimestamp) {
+            this.animation = animation;
+            this.mainFrameTimestamp = mainFrameTimestamp;
+        }
+
+        public static final int CONSTRUCTOR = 90846242;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public abstract static class InputCredentials extends Object {
     }
 
@@ -5310,18 +5619,20 @@ public class TdApi {
     public static class InputMessageDocument extends InputMessageContent {
         public InputFile document;
         public InputThumbnail thumbnail;
+        public boolean forceFile;
         public FormattedText caption;
 
         public InputMessageDocument() {
         }
 
-        public InputMessageDocument(InputFile document, InputThumbnail thumbnail, FormattedText caption) {
+        public InputMessageDocument(InputFile document, InputThumbnail thumbnail, boolean forceFile, FormattedText caption) {
             this.document = document;
             this.thumbnail = thumbnail;
+            this.forceFile = forceFile;
             this.caption = caption;
         }
 
-        public static final int CONSTRUCTOR = 937970604;
+        public static final int CONSTRUCTOR = 1960124119;
 
         @Override
         public int getConstructor() {
@@ -5633,21 +5944,19 @@ public class TdApi {
         public long fromChatId;
         public long messageId;
         public boolean inGameShare;
-        public boolean sendCopy;
-        public boolean removeCaption;
+        public MessageCopyOptions copyOptions;
 
         public InputMessageForwarded() {
         }
 
-        public InputMessageForwarded(long fromChatId, long messageId, boolean inGameShare, boolean sendCopy, boolean removeCaption) {
+        public InputMessageForwarded(long fromChatId, long messageId, boolean inGameShare, MessageCopyOptions copyOptions) {
             this.fromChatId = fromChatId;
             this.messageId = messageId;
             this.inGameShare = inGameShare;
-            this.sendCopy = sendCopy;
-            this.removeCaption = removeCaption;
+            this.copyOptions = copyOptions;
         }
 
-        public static final int CONSTRUCTOR = 1503132333;
+        public static final int CONSTRUCTOR = 1696232440;
 
         @Override
         public int getConstructor() {
@@ -7293,18 +7602,20 @@ public class TdApi {
     }
 
     public static class MessageCall extends MessageContent {
+        public boolean isVideo;
         public CallDiscardReason discardReason;
         public int duration;
 
         public MessageCall() {
         }
 
-        public MessageCall(CallDiscardReason discardReason, int duration) {
+        public MessageCall(boolean isVideo, CallDiscardReason discardReason, int duration) {
+            this.isVideo = isVideo;
             this.discardReason = discardReason;
             this.duration = duration;
         }
 
-        public static final int CONSTRUCTOR = 366512596;
+        public static final int CONSTRUCTOR = 538893824;
 
         @Override
         public int getConstructor() {
@@ -7369,16 +7680,16 @@ public class TdApi {
     }
 
     public static class MessageChatChangePhoto extends MessageContent {
-        public Photo photo;
+        public ChatPhoto photo;
 
         public MessageChatChangePhoto() {
         }
 
-        public MessageChatChangePhoto(Photo photo) {
+        public MessageChatChangePhoto(ChatPhoto photo) {
             this.photo = photo;
         }
 
-        public static final int CONSTRUCTOR = 319630249;
+        public static final int CONSTRUCTOR = -813415093;
 
         @Override
         public int getConstructor() {
@@ -7711,6 +8022,28 @@ public class TdApi {
         }
     }
 
+    public static class MessageCopyOptions extends Object {
+        public boolean sendCopy;
+        public boolean replaceCaption;
+        public FormattedText newCaption;
+
+        public MessageCopyOptions() {
+        }
+
+        public MessageCopyOptions(boolean sendCopy, boolean replaceCaption, FormattedText newCaption) {
+            this.sendCopy = sendCopy;
+            this.replaceCaption = replaceCaption;
+            this.newCaption = newCaption;
+        }
+
+        public static final int CONSTRUCTOR = 1208442937;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class MessageForwardInfo extends Object {
         public MessageForwardOrigin origin;
         public int date;
@@ -7849,6 +8182,28 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 2092947464;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class MessageSendOptions extends Object {
+        public boolean disableNotification;
+        public boolean fromBackground;
+        public MessageSchedulingState schedulingState;
+
+        public MessageSendOptions() {
+        }
+
+        public MessageSendOptions(boolean disableNotification, boolean fromBackground, MessageSchedulingState schedulingState) {
+            this.disableNotification = disableNotification;
+            this.fromBackground = fromBackground;
+            this.schedulingState = schedulingState;
+        }
+
+        public static final int CONSTRUCTOR = 914544314;
 
         @Override
         public int getConstructor() {
@@ -8895,19 +9250,19 @@ public class TdApi {
 
     public static class PageBlockChatLink extends PageBlock {
         public String title;
-        public ChatPhoto photo;
+        public ChatPhotoInfo photo;
         public String username;
 
         public PageBlockChatLink() {
         }
 
-        public PageBlockChatLink(String title, ChatPhoto photo, String username) {
+        public PageBlockChatLink(String title, ChatPhotoInfo photo, String username) {
             this.title = title;
             this.photo = photo;
             this.username = username;
         }
 
-        public static final int CONSTRUCTOR = 214606645;
+        public static final int CONSTRUCTOR = -202091253;
 
         @Override
         public int getConstructor() {
@@ -10214,17 +10569,19 @@ public class TdApi {
         public long id;
         public File small;
         public File big;
+        public boolean hasAnimation;
 
         public ProfilePhoto() {
         }
 
-        public ProfilePhoto(long id, File small, File big) {
+        public ProfilePhoto(long id, File small, File big, boolean hasAnimation) {
             this.id = id;
             this.small = small;
             this.big = big;
+            this.hasAnimation = hasAnimation;
         }
 
-        public static final int CONSTRUCTOR = 978085937;
+        public static final int CONSTRUCTOR = 1270562457;
 
         @Override
         public int getConstructor() {
@@ -11764,28 +12121,6 @@ public class TdApi {
         }
     }
 
-    public static class SendMessageOptions extends Object {
-        public boolean disableNotification;
-        public boolean fromBackground;
-        public MessageSchedulingState schedulingState;
-
-        public SendMessageOptions() {
-        }
-
-        public SendMessageOptions(boolean disableNotification, boolean fromBackground, MessageSchedulingState schedulingState) {
-            this.disableNotification = disableNotification;
-            this.fromBackground = fromBackground;
-            this.schedulingState = schedulingState;
-        }
-
-        public static final int CONSTRUCTOR = 669760254;
-
-        @Override
-        public int getConstructor() {
-            return CONSTRUCTOR;
-        }
-    }
-
     public static class Session extends Object {
         public long id;
         public boolean isCurrent;
@@ -12199,6 +12534,35 @@ public class TdApi {
         }
     }
 
+    public abstract static class SuggestedAction extends Object {
+    }
+
+    public static class SuggestedActionEnableArchiveAndMuteNewChats extends SuggestedAction {
+
+        public SuggestedActionEnableArchiveAndMuteNewChats() {
+        }
+
+        public static final int CONSTRUCTOR = 2017586255;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class SuggestedActionCheckPhoneNumber extends SuggestedAction {
+
+        public SuggestedActionCheckPhoneNumber() {
+        }
+
+        public static final int CONSTRUCTOR = 648771563;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class Supergroup extends Object {
         public int id;
         public String username;
@@ -12242,6 +12606,7 @@ public class TdApi {
     }
 
     public static class SupergroupFullInfo extends Object {
+        public ChatPhoto photo;
         public String description;
         public int memberCount;
         public int administratorCount;
@@ -12265,7 +12630,8 @@ public class TdApi {
         public SupergroupFullInfo() {
         }
 
-        public SupergroupFullInfo(String description, int memberCount, int administratorCount, int restrictedCount, int bannedCount, long linkedChatId, int slowModeDelay, double slowModeDelayExpiresIn, boolean canGetMembers, boolean canSetUsername, boolean canSetStickerSet, boolean canSetLocation, boolean canViewStatistics, boolean isAllHistoryAvailable, long stickerSetId, ChatLocation location, String inviteLink, int upgradedFromBasicGroupId, long upgradedFromMaxMessageId) {
+        public SupergroupFullInfo(ChatPhoto photo, String description, int memberCount, int administratorCount, int restrictedCount, int bannedCount, long linkedChatId, int slowModeDelay, double slowModeDelayExpiresIn, boolean canGetMembers, boolean canSetUsername, boolean canSetStickerSet, boolean canSetLocation, boolean canViewStatistics, boolean isAllHistoryAvailable, long stickerSetId, ChatLocation location, String inviteLink, int upgradedFromBasicGroupId, long upgradedFromMaxMessageId) {
+            this.photo = photo;
             this.description = description;
             this.memberCount = memberCount;
             this.administratorCount = administratorCount;
@@ -12287,7 +12653,7 @@ public class TdApi {
             this.upgradedFromMaxMessageId = upgradedFromMaxMessageId;
         }
 
-        public static final int CONSTRUCTOR = -1562832718;
+        public static final int CONSTRUCTOR = -739402159;
 
         @Override
         public int getConstructor() {
@@ -13539,17 +13905,17 @@ public class TdApi {
 
     public static class UpdateChatPhoto extends Update {
         public long chatId;
-        public ChatPhoto photo;
+        public ChatPhotoInfo photo;
 
         public UpdateChatPhoto() {
         }
 
-        public UpdateChatPhoto(long chatId, ChatPhoto photo) {
+        public UpdateChatPhoto(long chatId, ChatPhotoInfo photo) {
             this.chatId = chatId;
             this.photo = photo;
         }
 
-        public static final int CONSTRUCTOR = -209353966;
+        public static final int CONSTRUCTOR = -324713921;
 
         @Override
         public int getConstructor() {
@@ -14287,6 +14653,26 @@ public class TdApi {
         }
     }
 
+    public static class UpdateNewCallSignalingData extends Update {
+        public int callId;
+        public byte[] data;
+
+        public UpdateNewCallSignalingData() {
+        }
+
+        public UpdateNewCallSignalingData(int callId, byte[] data) {
+            this.callId = callId;
+            this.data = data;
+        }
+
+        public static final int CONSTRUCTOR = 583634317;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class UpdateUserPrivacySettingRules extends Update {
         public UserPrivacySetting setting;
         public UserPrivacySettingRules rules;
@@ -14625,6 +15011,26 @@ public class TdApi {
         }
     }
 
+    public static class UpdateSuggestedActions extends Update {
+        public SuggestedAction[] addedActions;
+        public SuggestedAction[] removedActions;
+
+        public UpdateSuggestedActions() {
+        }
+
+        public UpdateSuggestedActions(SuggestedAction[] addedActions, SuggestedAction[] removedActions) {
+            this.addedActions = addedActions;
+            this.removedActions = removedActions;
+        }
+
+        public static final int CONSTRUCTOR = 1459452346;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class UpdateNewInlineQuery extends Update {
         public long id;
         public int senderUserId;
@@ -14932,8 +15338,10 @@ public class TdApi {
     }
 
     public static class UserFullInfo extends Object {
+        public ChatPhoto photo;
         public boolean isBlocked;
         public boolean canBeCalled;
+        public boolean supportsVideoCalls;
         public boolean hasPrivateCalls;
         public boolean needPhoneNumberPrivacyException;
         public String bio;
@@ -14944,9 +15352,11 @@ public class TdApi {
         public UserFullInfo() {
         }
 
-        public UserFullInfo(boolean isBlocked, boolean canBeCalled, boolean hasPrivateCalls, boolean needPhoneNumberPrivacyException, String bio, String shareText, int groupInCommonCount, BotInfo botInfo) {
+        public UserFullInfo(ChatPhoto photo, boolean isBlocked, boolean canBeCalled, boolean supportsVideoCalls, boolean hasPrivateCalls, boolean needPhoneNumberPrivacyException, String bio, String shareText, int groupInCommonCount, BotInfo botInfo) {
+            this.photo = photo;
             this.isBlocked = isBlocked;
             this.canBeCalled = canBeCalled;
+            this.supportsVideoCalls = supportsVideoCalls;
             this.hasPrivateCalls = hasPrivateCalls;
             this.needPhoneNumberPrivacyException = needPhoneNumberPrivacyException;
             this.bio = bio;
@@ -14955,7 +15365,7 @@ public class TdApi {
             this.botInfo = botInfo;
         }
 
-        public static final int CONSTRUCTOR = 333888500;
+        public static final int CONSTRUCTOR = -710655904;
 
         @Override
         public int getConstructor() {
@@ -15208,48 +15618,6 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 322477541;
-
-        @Override
-        public int getConstructor() {
-            return CONSTRUCTOR;
-        }
-    }
-
-    public static class UserProfilePhoto extends Object {
-        public long id;
-        public int addedDate;
-        public PhotoSize[] sizes;
-
-        public UserProfilePhoto() {
-        }
-
-        public UserProfilePhoto(long id, int addedDate, PhotoSize[] sizes) {
-            this.id = id;
-            this.addedDate = addedDate;
-            this.sizes = sizes;
-        }
-
-        public static final int CONSTRUCTOR = -1882596466;
-
-        @Override
-        public int getConstructor() {
-            return CONSTRUCTOR;
-        }
-    }
-
-    public static class UserProfilePhotos extends Object {
-        public int totalCount;
-        public UserProfilePhoto[] photos;
-
-        public UserProfilePhotos() {
-        }
-
-        public UserProfilePhotos(int totalCount, UserProfilePhoto[] photos) {
-            this.totalCount = totalCount;
-            this.photos = photos;
-        }
-
-        public static final int CONSTRUCTOR = 1512709690;
 
         @Override
         public int getConstructor() {
@@ -16611,16 +16979,18 @@ public class TdApi {
     public static class CreateCall extends Function {
         public int userId;
         public CallProtocol protocol;
+        public boolean isVideo;
 
         public CreateCall() {
         }
 
-        public CreateCall(int userId, CallProtocol protocol) {
+        public CreateCall(int userId, CallProtocol protocol, boolean isVideo) {
             this.userId = userId;
             this.protocol = protocol;
+            this.isVideo = isVideo;
         }
 
-        public static final int CONSTRUCTOR = -1742408159;
+        public static final int CONSTRUCTOR = 1837533340;
 
         @Override
         public int getConstructor() {
@@ -17078,19 +17448,21 @@ public class TdApi {
         public int callId;
         public boolean isDisconnected;
         public int duration;
+        public boolean isVideo;
         public long connectionId;
 
         public DiscardCall() {
         }
 
-        public DiscardCall(int callId, boolean isDisconnected, int duration, long connectionId) {
+        public DiscardCall(int callId, boolean isDisconnected, int duration, boolean isVideo, long connectionId) {
             this.callId = callId;
             this.isDisconnected = isDisconnected;
             this.duration = duration;
+            this.isVideo = isVideo;
             this.connectionId = connectionId;
         }
 
-        public static final int CONSTRUCTOR = -923187372;
+        public static final int CONSTRUCTOR = -1784044162;
 
         @Override
         public int getConstructor() {
@@ -17509,7 +17881,7 @@ public class TdApi {
         public long chatId;
         public long fromChatId;
         public long[] messageIds;
-        public SendMessageOptions options;
+        public MessageSendOptions options;
         public boolean asAlbum;
         public boolean sendCopy;
         public boolean removeCaption;
@@ -17517,7 +17889,7 @@ public class TdApi {
         public ForwardMessages() {
         }
 
-        public ForwardMessages(long chatId, long fromChatId, long[] messageIds, SendMessageOptions options, boolean asAlbum, boolean sendCopy, boolean removeCaption) {
+        public ForwardMessages(long chatId, long fromChatId, long[] messageIds, MessageSendOptions options, boolean asAlbum, boolean sendCopy, boolean removeCaption) {
             this.chatId = chatId;
             this.fromChatId = fromChatId;
             this.messageIds = messageIds;
@@ -17527,7 +17899,7 @@ public class TdApi {
             this.removeCaption = removeCaption;
         }
 
-        public static final int CONSTRUCTOR = -1633531094;
+        public static final int CONSTRUCTOR = 705611900;
 
         @Override
         public int getConstructor() {
@@ -19664,7 +20036,7 @@ public class TdApi {
             this.limit = limit;
         }
 
-        public static final int CONSTRUCTOR = -2062927433;
+        public static final int CONSTRUCTOR = -768699141;
 
         @Override
         public int getConstructor() {
@@ -19703,6 +20075,24 @@ public class TdApi {
         }
 
         public static final int CONSTRUCTOR = 573441580;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
+    public static class HideSuggestedAction extends Function {
+        public SuggestedAction action;
+
+        public HideSuggestedAction() {
+        }
+
+        public HideSuggestedAction(SuggestedAction action) {
+            this.action = action;
+        }
+
+        public static final int CONSTRUCTOR = -1561384065;
 
         @Override
         public int getConstructor() {
@@ -21074,6 +21464,26 @@ public class TdApi {
         }
     }
 
+    public static class SendCallSignalingData extends Function {
+        public int callId;
+        public byte[] data;
+
+        public SendCallSignalingData() {
+        }
+
+        public SendCallSignalingData(int callId, byte[] data) {
+            this.callId = callId;
+            this.data = data;
+        }
+
+        public static final int CONSTRUCTOR = 1412280732;
+
+        @Override
+        public int getConstructor() {
+            return CONSTRUCTOR;
+        }
+    }
+
     public static class SendChatAction extends Function {
         public long chatId;
         public ChatAction action;
@@ -21173,7 +21583,7 @@ public class TdApi {
     public static class SendInlineQueryResultMessage extends Function {
         public long chatId;
         public long replyToMessageId;
-        public SendMessageOptions options;
+        public MessageSendOptions options;
         public long queryId;
         public String resultId;
         public boolean hideViaBot;
@@ -21181,7 +21591,7 @@ public class TdApi {
         public SendInlineQueryResultMessage() {
         }
 
-        public SendInlineQueryResultMessage(long chatId, long replyToMessageId, SendMessageOptions options, long queryId, String resultId, boolean hideViaBot) {
+        public SendInlineQueryResultMessage(long chatId, long replyToMessageId, MessageSendOptions options, long queryId, String resultId, boolean hideViaBot) {
             this.chatId = chatId;
             this.replyToMessageId = replyToMessageId;
             this.options = options;
@@ -21190,7 +21600,7 @@ public class TdApi {
             this.hideViaBot = hideViaBot;
         }
 
-        public static final int CONSTRUCTOR = 729880339;
+        public static final int CONSTRUCTOR = -1624402875;
 
         @Override
         public int getConstructor() {
@@ -21201,14 +21611,14 @@ public class TdApi {
     public static class SendMessage extends Function {
         public long chatId;
         public long replyToMessageId;
-        public SendMessageOptions options;
+        public MessageSendOptions options;
         public ReplyMarkup replyMarkup;
         public InputMessageContent inputMessageContent;
 
         public SendMessage() {
         }
 
-        public SendMessage(long chatId, long replyToMessageId, SendMessageOptions options, ReplyMarkup replyMarkup, InputMessageContent inputMessageContent) {
+        public SendMessage(long chatId, long replyToMessageId, MessageSendOptions options, ReplyMarkup replyMarkup, InputMessageContent inputMessageContent) {
             this.chatId = chatId;
             this.replyToMessageId = replyToMessageId;
             this.options = options;
@@ -21216,7 +21626,7 @@ public class TdApi {
             this.inputMessageContent = inputMessageContent;
         }
 
-        public static final int CONSTRUCTOR = -1314396596;
+        public static final int CONSTRUCTOR = -1693468857;
 
         @Override
         public int getConstructor() {
@@ -21227,20 +21637,20 @@ public class TdApi {
     public static class SendMessageAlbum extends Function {
         public long chatId;
         public long replyToMessageId;
-        public SendMessageOptions options;
+        public MessageSendOptions options;
         public InputMessageContent[] inputMessageContents;
 
         public SendMessageAlbum() {
         }
 
-        public SendMessageAlbum(long chatId, long replyToMessageId, SendMessageOptions options, InputMessageContent[] inputMessageContents) {
+        public SendMessageAlbum(long chatId, long replyToMessageId, MessageSendOptions options, InputMessageContent[] inputMessageContents) {
             this.chatId = chatId;
             this.replyToMessageId = replyToMessageId;
             this.options = options;
             this.inputMessageContents = inputMessageContents;
         }
 
-        public static final int CONSTRUCTOR = -818794592;
+        public static final int CONSTRUCTOR = 1301182434;
 
         @Override
         public int getConstructor() {
@@ -21636,17 +22046,17 @@ public class TdApi {
 
     public static class SetChatPhoto extends Function {
         public long chatId;
-        public InputFile photo;
+        public InputChatPhoto photo;
 
         public SetChatPhoto() {
         }
 
-        public SetChatPhoto(long chatId, InputFile photo) {
+        public SetChatPhoto(long chatId, InputChatPhoto photo) {
             this.chatId = chatId;
             this.photo = photo;
         }
 
-        public static final int CONSTRUCTOR = 132244217;
+        public static final int CONSTRUCTOR = -377778941;
 
         @Override
         public int getConstructor() {
@@ -22087,16 +22497,16 @@ public class TdApi {
     }
 
     public static class SetProfilePhoto extends Function {
-        public InputFile photo;
+        public InputChatPhoto photo;
 
         public SetProfilePhoto() {
         }
 
-        public SetProfilePhoto(InputFile photo) {
+        public SetProfilePhoto(InputChatPhoto photo) {
             this.photo = photo;
         }
 
-        public static final int CONSTRUCTOR = 1594734550;
+        public static final int CONSTRUCTOR = -2069678882;
 
         @Override
         public int getConstructor() {
