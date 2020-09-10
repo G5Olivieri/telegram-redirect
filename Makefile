@@ -6,3 +6,9 @@ run:
 
 shell:
 	docker-compose run --rm app bash
+
+generate_api:
+	docker-compose run --rm bash -c "td_generate_java_api TdApi /usr/local/bin/td/generate/scheme/td_api.tlo src/main/java/ org/glayson/telegram"
+
+compile_lib:
+	docker-compose run --rm bash -c "cd tdjni; cmake && cmake --build ."
