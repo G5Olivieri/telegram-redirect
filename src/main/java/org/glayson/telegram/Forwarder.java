@@ -143,6 +143,7 @@ public final class Forwarder implements AbstractHandler {
                         new TdApi.InputMessageDocument(
                                 newInputFileRemote(id),
                                 newThumbnail(thumbnail),
+                                false,
                                 content.caption
                         )
                 );
@@ -175,6 +176,20 @@ public final class Forwarder implements AbstractHandler {
                                 animation.width,
                                 animation.height,
                                 content.caption
+                        )
+                );
+                break;
+            }
+            case TdApi.MessageSticker.CONSTRUCTOR: {
+                TdApi.MessageSticker content = (TdApi.MessageSticker)message.content;
+                TdApi.Sticker sticker = content.sticker;
+                sendMessage(
+                        message,
+                        new TdApi.InputMessageSticker(
+                                newInputFileRemote(sticker.sticker.remote.id),
+                                newThumbnail(sticker.thumbnail),
+                                sticker.width,
+                                sticker.height
                         )
                 );
                 break;

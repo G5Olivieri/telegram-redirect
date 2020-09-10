@@ -1,10 +1,10 @@
 package org.glayson.telegram;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class UpdateMessageHandler implements Handler {
-    private final List<Forwarder> handlers = new ArrayList<>();
+    private final ConcurrentHashMap<Long, Handler> chatHandlers = new ConcurrentHashMap<>();
 
     @Override
     public void handle(long eventId, TdApi.Object object) {
@@ -23,24 +23,14 @@ public final class UpdateMessageHandler implements Handler {
                 break;
             }
         }
-        for (Forwarder chatHandler : handlers) {
-            if (chatHandler.inputChatId() == chatId || chatHandler.outputChatId() == chatId) {
-                chatHandler.handle(eventId, object);
-            }
-        }
+        Optional.ofNullable(chatHandlers.get(chatId)).ifPresent((handler) -> handler.handle(eventId, object));
     }
 
-    public void printRedirects() {
-        for (Forwarder forwarder : handlers) {
-            System.out.println("Redirecionando de " + forwarder.inputChatId() + " para " + forwarder.outputChatId());
-        }
+    public void putChatHandler(long chatId, Handler handler) {
+       this.chatHandlers.put(chatId, handler);
     }
 
-    public void removeHandler(Long inputChatId, Long outputChatId) {
-        handlers.removeIf(forwarder -> forwarder.outputChatId() == outputChatId && forwarder.inputChatId() == inputChatId);
-    }
-
-    public void addHandler(Forwarder forwarder) {
-        this.handlers.add(forwarder);
+    public void removeChatHandler(Long chatId) {
+       this.chatHandlers.remove(chatId);
     }
 }

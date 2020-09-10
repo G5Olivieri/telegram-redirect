@@ -14,6 +14,7 @@ public final class EventLoop implements Runnable {
     private final AtomicLong currentQueryId = new AtomicLong();
     private final Map<Long, Handler> handlers = new ConcurrentHashMap<>();
     private volatile boolean isActive = true;
+    private Callback onStartupCallback;
 
     public EventLoop(Handler updatesHandler) {
         this.clientId = TelegramNativeClient.createNativeClient();
@@ -35,7 +36,10 @@ public final class EventLoop implements Runnable {
 
         System.out.println("It's authorization: " + auth.login());
 
-        new Thread(this).start();
+        this.onStartupCallback.call();
+        receiveQueries(300);
+
+        run();
     }
 
     public synchronized long send(TdApi.Function function, Handler handler) {
@@ -47,7 +51,7 @@ public final class EventLoop implements Runnable {
         return queryId;
     }
 
-    public void close() {
+    public synchronized void close() {
         send(new TdApi.Close(), (id, e) -> System.out.println("Close received: " + e));
     }
 
@@ -81,5 +85,9 @@ public final class EventLoop implements Runnable {
         if (eventId != 0){
             this.handlers.remove(eventId);
         }
+    }
+
+    public void onStartup(Callback callback) {
+        this.onStartupCallback = callback;
     }
 }
