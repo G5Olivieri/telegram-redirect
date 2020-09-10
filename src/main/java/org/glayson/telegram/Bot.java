@@ -11,6 +11,7 @@ public final class Bot implements Handler {
         this.me = me;
         this.chatsHandler = chatsHandler;
         this.forwarders = forwarders;
+        sendMessage("Oi eu sou o BOT para saber mais envie '!commands'\n");
     }
 
     @Override
@@ -54,6 +55,16 @@ public final class Bot implements Handler {
                 Long inputChatId = Long.parseLong(args[1]);
                 Long outputChatId = Long.parseLong(args[2]);
                 forwarders.removeHandler(inputChatId, outputChatId);
+                break;
+            }
+            case "commands": {
+                sendMessage(
+                    "\n\n!chats - mostra os principais chats\n" +
+                    "!redirect <chat_id_input> <chat_id_output> - redireciona de um chat para o outro\n" +
+                    "!redirects - mostra todos os redirects que estão ativos\n" +
+                    "!remove <chat_id_input> <chat_id_output> - remove um redirecionamento\n\n" +
+                    "Tudo entre '<>' são variáveis, substitua com os valores. Exemplo: <chat_id_input> = 123454\n"
+                );
                 break;
             }
         }

@@ -180,6 +180,20 @@ public final class Forwarder implements AbstractHandler {
                 );
                 break;
             }
+            case TdApi.MessageSticker.CONSTRUCTOR: {
+                TdApi.MessageSticker content = (TdApi.MessageSticker)message.content;
+                TdApi.Sticker sticker = content.sticker;
+                sendMessage(
+                        message,
+                        new TdApi.InputMessageSticker(
+                                newInputFileRemote(sticker.sticker.remote.id),
+                                newThumbnail(sticker.thumbnail),
+                                sticker.width,
+                                sticker.height
+                        )
+                );
+                break;
+            }
         }
     }
 
