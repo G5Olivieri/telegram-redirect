@@ -4,7 +4,7 @@ public final class Bot implements Handler {
     private final EventLoop loop;
     private final ChatsHandler chatsHandler;
     private final Forwarders forwarders;
-    private long me;
+    private final long me;
 
     public Bot(EventLoop loop, long me, ChatsHandler chatsHandler, Forwarders forwarders) {
         this.loop = loop;

@@ -1,74 +1,72 @@
 package org.glayson.telegram;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Random;
 
-public final class EventLoop implements Runnable {
+public final class EventLoop implements java.lang.Runnable {
     private final int EVENT_SIZE = 100;
     private final long[] eventIds = new long[EVENT_SIZE];
     private final TdApi.Object[] events = new TdApi.Object[EVENT_SIZE];
     private final long clientId;
 
-    private final AtomicLong currentQueryId = new AtomicLong();
-    private final Map<Long, Handler> handlers = new ConcurrentHashMap<>();
+    private final Random random = new Random();
+    private final Map<Long, Handler> handlers = new HashMap<>();
     private volatile boolean isActive = true;
-    private Callback onStartupCallback;
 
     public EventLoop(Handler updatesHandler) {
         this.clientId = TelegramNativeClient.createNativeClient();
         this.handlers.put(0L, updatesHandler);
     }
 
+    @Override
+    public void run() {
+        onInterrupted();
+        while(isActive) {
+            receiveQueries();
+        }
+
+        while (handlers.size() != 1) {
+            receiveQueries();
+        }
+        TelegramNativeClient.destroyNativeClient(clientId);
+    }
+
     public void stop() {
         isActive = false;
     }
 
-    public void start() {
-        AuthorizationHandler auth = new AuthorizationHandler(this);
-        UpdatesHandler updatesHandler = (UpdatesHandler)this.handlers.get(0L);
-        updatesHandler.setHandler(TdApi.UpdateAuthorizationState.CONSTRUCTOR, auth);
-
-        while (!auth.login()) {
-            receiveQueries(300);
-        }
-
-        System.out.println("It's authorization: " + auth.login());
-
-        this.onStartupCallback.call();
-        receiveQueries(300);
-
-        run();
-    }
-
-    public synchronized long send(TdApi.Function function, Handler handler) {
+    public long send(TdApi.Function function, Handler handler) {
         Objects.requireNonNull(function);
         Objects.requireNonNull(handler);
-        long queryId = currentQueryId.incrementAndGet();
+        final long queryId = random.nextLong();
         handlers.put(queryId, handler);
         TelegramNativeClient.nativeClientSend(clientId, queryId, function);
         return queryId;
     }
 
-    public synchronized void close() {
-        send(new TdApi.Close(), (id, e) -> System.out.println("Close received: " + e));
+    private void onInterrupted() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\nSHUTDOWN");
+            this.close();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }));
     }
 
-    @Override
-    public void run() {
-        int timeout = 300;
-        while(isActive) {
-            receiveQueries(timeout);
-        }
-        while(handlers.size() != 1) {
-            receiveQueries(timeout);
-        }
-        TelegramNativeClient.destroyNativeClient(clientId);
+    private void close() {
+        send(new TdApi.Close(), (id, object) -> {
+            String status = object.getConstructor() == TdApi.Ok.CONSTRUCTOR ? "OK" : "ERROR";
+            System.out.println("Close request received status: " + status);
+        });
     }
 
-    private void receiveQueries(int timeoutInSeconds) {
-        int result = TelegramNativeClient.nativeClientReceive(clientId, eventIds, events, timeoutInSeconds);
+    private void receiveQueries() {
+        int result = TelegramNativeClient.nativeClientReceive(clientId, eventIds, events, 300);
         for(int i = 0; i < result; i++) {
             processEvent(eventIds[i], events[i]);
             eventIds[i] = 0;
@@ -85,9 +83,5 @@ public final class EventLoop implements Runnable {
         if (eventId != 0){
             this.handlers.remove(eventId);
         }
-    }
-
-    public void onStartup(Callback callback) {
-        this.onStartupCallback = callback;
     }
 }
