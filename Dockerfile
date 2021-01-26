@@ -6,4 +6,4 @@ RUN apt-get update \
   && mkdir -p td/jnibuild \
   && cd td/jnibuild \
   && cmake -DCMAKE_BUILD_TYPE=Release -DTD_ENABLE_JNI=ON .. \
-  && cmake --build . -j 4 --target install
+  && cmake --build . --target install
