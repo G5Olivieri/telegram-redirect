@@ -1,4 +1,4 @@
-apt install cmake build-essential git gperf zlib1g-dev libssl-dev openjdk-8-jdk
+apt install cmake build-essential git gperf zlib1g-dev libssl-dev openjdk-11-jdk
 
 git clone https://github.com/tdlib/td
 git clone https://github.com/G5Olivieri/telegram-redirect
